@@ -1,0 +1,259 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .navbar .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .navbar .logo-symbol {
+            font-size: 2rem;
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+        }
+
+        .nav-links li {
+            margin-left: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .nav-links a.cta-nav {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .nav-links a.cta-nav:hover {
+            background: #f0f0f0;
+        }
+
+
+        /* Header / Hero Section */
+        .hero-section {
+            text-align: center;
+            color: white;
+            padding: 80px 20px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.1); /* Slightly darker to make text pop */
+            margin-bottom: 50px;
+            animation: fadeInUp 1s 0.2s ease-out backwards;
+        }
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        .hero-section p.subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta-button {
+            display: inline-block;
+            padding: 15px 35px;
+            background: white;
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .hero-cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            animation: fadeInUp 1s 0.4s ease-out backwards;
+        }
+
+        .content-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #4a5568; /* Darker gray for headings */
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .content-section h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: #667eea;
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+
+        .features-grid, .how-it-works-grid, .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card, .step-card, .benefit-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover, .step-card:hover, .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+
+        .feature-card .icon, .step-card .icon, .benefit-card .icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            line-height: 1;
+        }
+
+        .feature-card h3, .step-card h3, .benefit-card h3 {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p, .step-card p, .benefit-card p {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 20px;
+            animation: fadeInUp 1s 0.6s ease-out backwards;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+            .navbar .logo {
+                margin-bottom: 15px;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: space-around;
+            }
+            .nav-links li {
+                margin-left: 0;
+            }
+            .nav-links a {
+                padding: 8px 10px;
+            }
+
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p.subtitle {
+                font-size: 1.1rem;
+            }
+            .hero-section {
+                padding: 50px 15px;
+            }
+
+            .content-section {
+                padding: 30px 20px;
+            }
+            .content-section h2 {
+                font-size: 2rem;
+            }
+
+            .features-grid, .how-it-works-grid, .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+        }

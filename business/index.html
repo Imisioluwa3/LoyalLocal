@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoyalLocal - Phone-Based Loyalty Rewards</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💈 LoyalLocal</h1>
+            <p>Simple Phone-Based Loyalty Rewards for Local Businesses</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-container">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('login')">Login</button>
+                <button class="tab" onclick="switchTab('register')">Register Business</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your business email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="btn" onclick="login()">Login to Dashboard</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" placeholder="Your Salon/Barber/Restaurant Name">
+                </div>
+                <div class="form-group">
+                    <label for="businessType">Business Type</label>
+                    <select id="businessType">
+                        <option value="">Select Business Type</option>
+                        <option value="salon">Hair Salon</option>
+                        <option value="barber">Barbershop</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="cafe">Café</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="businessEmail">Business Email</label>
+                    <input type="email" id="businessEmail" placeholder="business@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="businessPassword">Password</label>
+                    <input type="password" id="businessPassword" placeholder="Create a secure password">
+                </div>
+                <div class="form-group">
+                    <label for="businessAddress">Business Address</label>
+                    <input type="text" id="businessAddress" placeholder="123 Main St, City, State">
+                </div>
+                <button class="btn" onclick="register()">Create Business Account</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="dashboard">
+            <div class="navigation">
+                <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+                <button class="nav-btn" onclick="showSection('customers')">Customers</button>
+                <button class="nav-btn" onclick="showSection('settings')">Settings</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overviewSection">
+                <div class="dashboard-header">
+                    <h2 id="businessNameDisplay">Welcome to Your Dashboard</h2>
+                    <p>Manage your loyalty program and track customer visits</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalCustomers">0</span>
+                        <div class="stat-label">Total Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="visitsToday">0</span>
+                        <div class="stat-label">Visits Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="rewardsRedeemed">0</span>
+                        <div class="stat-label">Rewards Redeemed</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="rewardsEarned">0</span>
+                        <div class="stat-label">Rewards Earned</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Management Section -->
+            <div id="customersSection" style="display: none;">
+                <div class="main-actions">
+                    <div class="action-section">
+                        <h3>🔍 Look Up Customer</h3>
+                        <div class="phone-input">
+                            <input type="tel" id="customerPhone" placeholder="Enter phone number (e.g., 555-123-4567)">
+                            <button onclick="lookupCustomer()">Look Up</button>
+                        </div>
+                    </div>
+
+                    <div id="customerDisplay" style="display: none;">
+                        <div class="customer-info">
+                            <h4 id="customerName">Customer Name</h4>
+                            <p id="customerPhoneDisplay">Phone: </p>
+                            <p id="visitCount">Visits: 0</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                            </div>
+                            <p id="progressText">0 visits towards reward</p>
+                        </div>
+
+                        <div id="rewardSection" class="reward-available" style="display: none;">
+                            <h4>🎉 Reward Available!</h4>
+                            <p id="rewardDescription">Customer has earned a reward!</p>
+                            <button class="redeem-btn" onclick="redeemReward()">Redeem Reward</button>
+                        </div>
+
+                        <div class="phone-input">
+                            <button onclick="logVisit()" style="background: #667eea; flex: 1;">Log Visit</button>
+                        </div>
+                    </div>
+
+                    <div id="newCustomerForm" style="display: none;">
+                        <div class="customer-info">
+                            <h4>New Customer</h4>
+                            <div class="form-group">
+                                <label for="newCustomerName">Customer Name (Optional)</label>
+                                <input type="text" id="newCustomerName" placeholder="Enter customer name">
+                            </div>
+                            <button class="btn" onclick="addNewCustomer()">Add Customer & Log First Visit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settingsSection" style="display: none;">
+                <div class="settings-panel">
+                    <h3>⚙️ Loyalty Program Configuration</h3>
+                    <div class="loyalty-config">
+                        <div class="form-group">
+                            <label for="visitsRequired">Visits Required for Reward</label>
+                            <input type="number" id="visitsRequired" value="5" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="rewardDescription">Reward Description</label>
+                            <input type="text" id="rewardDescription" value="50% off next service" placeholder="e.g., Free coffee, 20% off">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="smsNotifications" checked> Enable SMS Notifications
+                        </label>
+                        <small style="display: block; color: #666; margin-top: 5px;">
+                            Send welcome messages and reward notifications to customers
+                        </small>
+                    </div>
+                    <button class="btn" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
