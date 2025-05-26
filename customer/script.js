@@ -1,230 +1,254 @@
-const SUPABASE_URL = 'https://mhwsjjumsiveahfckcwr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1od3NqanVtc2l2ZWFoZmNrY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMTc4MTQsImV4cCI6MjA2MzU5MzgxNH0.5varGB23DXpfi1adlwejmYwLlTbbjCPfKGDm9rWEQBo';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // -------------------------------------------------------------------------
-    // UTILITY FUNCTIONS (Loading Indicators)
-    // -------------------------------------------------------------------------
-    function showLoading(message = 'Loading...') {
-        let loader = document.getElementById('loader-customer'); // Use a different ID to avoid conflicts if on same page
-        if (!loader) {
-            loader = document.createElement('div');
-            loader.id = 'loader-customer';
-            loader.style.position = 'fixed';
-            loader.style.top = '0';
-            loader.style.left = '0';
-            loader.style.width = '100%';
-            loader.style.height = '100%';
-            loader.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-            loader.style.color = '#333';
-            loader.style.display = 'flex';
-            loader.style.flexDirection = 'column';
-            loader.style.justifyContent = 'center';
-            loader.style.alignItems = 'center';
-            loader.style.zIndex = '10000';
-            loader.style.fontSize = '1.2em';
-            loader.innerHTML = `
-                <div class="spinner" style="
-                    border: 4px solid rgba(0,0,0,0.1);
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 50%;
-                    border-left-color: #764ba2; /* Customer page theme color */
-                    animation: spin 1s ease infinite;
-                    margin-bottom: 10px;">
-                </div>
-                <p id="loader-customer-message">${message}</p>
-                <style>
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
+        // Sample data - In a real app, this would come from an API
+        const sampleCustomerData = {
+            "5551234567": {
+                name: "Alex Johnson",
+                businesses: {
+                    "Downtown Hair Studio": {
+                        type: "salon",
+                        visits: 3,
+                        visitsRequired: 5,
+                        rewardDescription: "50% off next haircut",
+                        lastVisit: "2024-05-20",
+                        totalEarned: 1
+                    },
+                    "Joe's Barbershop": {
+                        type: "barber",
+                        visits: 8,
+                        visitsRequired: 6,
+                        rewardDescription: "Free beard trim",
+                        lastVisit: "2024-05-22",
+                        totalEarned: 2
+                    },
+                    "Corner Café": {
+                        type: "cafe",
+                        visits: 12,
+                        visitsRequired: 10,
+                        rewardDescription: "Free coffee and pastry",
+                        lastVisit: "2024-05-23",
+                        totalEarned: 3
                     }
-                </style>
-            `;
-            document.body.appendChild(loader);
-        }
-        document.getElementById('loader-customer-message').textContent = message;
-        loader.style.display = 'flex';
-    }
+                }
+            },
+            "5559876543": {
+                name: "Sarah Mitchell",
+                businesses: {
+                    "Bella's Salon": {
+                        type: "salon",
+                        visits: 4,
+                        visitsRequired: 6,
+                        rewardDescription: "20% off any service",
+                        lastVisit: "2024-05-21",
+                        totalEarned: 0
+                    },
+                    "Pizza Palace": {
+                        type: "restaurant",
+                        visits: 7,
+                        visitsRequired: 8,
+                        rewardDescription: "Free large pizza",
+                        lastVisit: "2024-05-24",
+                        totalEarned: 1
+                    }
+                }
+            }
+        };
 
-    function hideLoading() {
-        const loader = document.getElementById('loader-customer');
-        if (loader) {
-            loader.style.display = 'none';
-        }
-    }
+        // Phone number formatting
+        document.getElementById('customerPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
 
-    // -------------------------------------------------------------------------
-    // CUSTOMER REWARDS LOOKUP
-    // -------------------------------------------------------------------------
-    async function handleCheckRewards(event) {
-        event.preventDefault();
-        const phoneNumberInput = document.getElementById('customerPhoneLookup');
-        const phoneNumber = phoneNumberInput.value.trim();
+        // Enter key support
+        document.getElementById('customerPhone').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                lookupRewards();
+            }
+        });
 
-        if (!phoneNumber) {
-            alert('Please enter your phone number.');
-            return;
-        }
-        // Basic phone number validation (can be improved)
-        if (!/^\+?[0-9\s\-()]{7,20}$/.test(phoneNumber)) {
-            alert('Please enter a valid phone number format.');
-            return;
-        }
-
-
-        showLoading('Checking your rewards status...');
-        const rewardsDisplay = document.getElementById('rewardsDisplay');
-        const customerSummaryDisplay = document.getElementById('customerSummary');
-        rewardsDisplay.innerHTML = ''; // Clear previous results
-        customerSummaryDisplay.innerHTML = ''; // Clear previous summary
-
-        try {
-            // Fetch all visits for this phone number, joining with business details
-            // This query relies on RLS allowing 'anon' or 'authenticated' users to read visits
-            // and related business data (name, loyalty rules).
-            const { data: allVisits, error: visitsError } = await supabase
-                .from('visits')
-                .select(`
-                    id,
-                    customer_name,
-                    created_at,
-                    is_redeemed_for_reward,
-                    business_id,
-                    businesses (
-                        id,
-                        name,
-                        type,
-                        loyalty_visits_required,
-                        loyalty_reward_description
-                    )
-                `)
-                .eq('customer_phone_number', phoneNumber)
-                .order('created_at', { foreignTable: 'visits', ascending: false }); // Order visits by date
-
-            if (visitsError) throw visitsError;
-
-            if (!allVisits || allVisits.length === 0) {
-                rewardsDisplay.innerHTML = '<p class="no-results">No loyalty programs found for this phone number. Visit a participating LoyalLocal business to start earning rewards!</p>';
-                hideLoading();
+        function lookupRewards() {
+            const phoneInput = document.getElementById('customerPhone').value;
+            const phoneNumber = phoneInput.replace(/\D/g, '');
+            
+            if (phoneNumber.length !== 10) {
+                alert('Please enter a valid 10-digit phone number');
                 return;
             }
 
-            // Group visits by business to display separate cards
-            const rewardsByBusiness = allVisits.reduce((acc, visit) => {
-                if (!visit.businesses) { // Skip if business data somehow missing (RLS issue?)
-                    console.warn("Skipping visit due to missing business data:", visit);
-                    return acc;
+            // Animate button
+            const btn = document.querySelector('.btn');
+            const btnText = document.getElementById('btnText');
+            btn.style.opacity = '0.7';
+            btnText.textContent = 'Searching...';
+
+            setTimeout(() => {
+                const customerData = sampleCustomerData[phoneNumber];
+                
+                if (customerData) {
+                    displayResults(customerData, phoneInput);
+                } else {
+                    showNoResults();
                 }
-                const bizId = visit.businesses.id;
-                if (!acc[bizId]) {
-                    acc[bizId] = {
-                        businessInfo: visit.businesses, // Contains name, type, loyalty_rules
-                        visits: [],
-                        customerName: visit.customer_name || 'Valued Customer' // Use provided name or default
-                    };
-                }
-                acc[bizId].visits.push({
-                    created_at: visit.created_at,
-                    is_redeemed_for_reward: visit.is_redeemed_for_reward
-                });
-                // Try to get the most recent non-null customer name for this business
-                if (visit.customer_name && acc[bizId].customerName === 'Valued Customer') {
-                     acc[bizId].customerName = visit.customer_name;
-                }
-                return acc;
-            }, {});
-
-
-            let rewardsHtml = '';
-            let totalActivePrograms = 0;
-            let totalAvailableRewardsToClaim = 0;
-            let overallCustomerName = "Valued Customer"; // Fallback
-
-            // Determine overall customer name from the groups
-            const customerNames = Object.values(rewardsByBusiness).map(data => data.customerName).filter(name => name !== 'Valued Customer');
-            if (customerNames.length > 0) {
-                overallCustomerName = customerNames[0]; // Pick the first non-default name
-            }
-
-
-            for (const bizId in rewardsByBusiness) {
-                totalActivePrograms++;
-                const data = rewardsByBusiness[bizId];
-                const bizInfo = data.businessInfo;
-
-                // Filter out redeemed visits for current stamp count
-                const unredeemedVisits = data.visits.filter(v => !v.is_redeemed_for_reward);
-                const currentStamps = unredeemedVisits.length;
-                const visitsNeeded = bizInfo.loyalty_visits_required || 5; // Fallback if somehow null
-                const progress = Math.min((currentStamps / visitsNeeded) * 100, 100);
-                const rewardAvailable = currentStamps >= visitsNeeded;
-
-                if (rewardAvailable) {
-                    totalAvailableRewardsToClaim++;
-                }
-
-                rewardsHtml += `
-                    <div class="loyalty-card">
-                        <div class="card-header">
-                            <h3>${bizInfo.name}</h3>
-                            <span class="business-type-customer">${bizInfo.type || 'Local Business'}</span>
-                        </div>
-                        <div class="card-body">
-                            <p class="progress-text">Your Progress: <strong>${currentStamps} / ${visitsNeeded}</strong> stamps</p>
-                            <div class="progress-bar-container-customer">
-                                <div class="progress-bar-customer" style="width: ${progress}%;"></div>
-                            </div>
-                            <div class="stamps-visual-customer">
-                                ${Array.from({ length: visitsNeeded }, (_, i) =>
-                                    `<span class="stamp-customer ${i < currentStamps ? 'filled' : ''}"></span>`
-                                ).join('')}
-                            </div>
-                `;
-                if (rewardAvailable) {
-                    rewardsHtml += `
-                        <div class="reward-available-customer">
-                            <p class="reward-title">🎉 Reward Available! 🎉</p>
-                            <p class="reward-description-customer">${bizInfo.loyalty_reward_description || 'A Special Reward'}</p>
-                            <p class="redeem-instruction"><small>Redeem this on your next visit to ${bizInfo.name}!</small></p>
-                        </div>
-                    `;
-                }
-                const lastVisitDate = data.visits.length > 0 ? new Date(data.visits[0].created_at).toLocaleDateString() : 'N/A';
-                rewardsHtml += `<p class="last-visit-customer"><small>Last activity: ${lastVisitDate}</small></p></div></div>`;
-            }
-
-
-            if (totalActivePrograms === 0) { // Should have been caught by allVisits.length check, but good failsafe
-                 rewardsDisplay.innerHTML = '<p class="no-results">No loyalty programs found for this phone number.</p>';
-            } else {
-                customerSummaryDisplay.innerHTML = `
-                    <h3>Hi ${overallCustomerName}!</h3>
-                    <p><strong>Phone Number:</strong> ${phoneNumber}</p>
-                    <p><strong>You're part of loyalty programs at:</strong> ${totalActivePrograms} ${totalActivePrograms === 1 ? 'business' : 'businesses'}.</p>
-                    <p><strong>Rewards ready to claim:</strong> <span class="highlight-stat">${totalAvailableRewardsToClaim}</span></p>
-                `;
-                rewardsDisplay.innerHTML = rewardsHtml;
-            }
-
-        } catch (error) {
-            console.error('Error fetching rewards:', error);
-            rewardsDisplay.innerHTML = `<p class="error-message">Oops! We couldn't fetch your rewards status right now (Error: ${error.message}). Please try again later.</p>`;
-            customerSummaryDisplay.innerHTML = ''; // Clear summary on error
-        } finally {
-            hideLoading();
-            phoneNumberInput.value = ''; // Clear the input after search
+                
+                // Reset button
+                btn.style.opacity = '1';
+                btnText.textContent = 'Check My Rewards';
+            }, 1000);
         }
-    }
 
-    // -------------------------------------------------------------------------
-    // DOM EVENT LISTENERS
-    // -------------------------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', () => {
-        const lookupForm = document.getElementById('customerLookupForm');
-        if (lookupForm) {
-            lookupForm.addEventListener('submit', handleCheckRewards);
-        } else {
-            console.error("Customer lookup form not found!");
+        function displayResults(customerData, phoneNumber) {
+            document.getElementById('lookupSection').style.display = 'none';
+            document.getElementById('resultsSection').classList.add('active');
+
+            // Update customer summary
+            document.getElementById('welcomeMessage').textContent = 
+                customerData.name ? `Welcome back, ${customerData.name}!` : 'Welcome back!';
+            document.getElementById('phoneDisplay').textContent = `Phone: ${phoneNumber}`;
+
+            // Calculate summary stats
+            const businesses = Object.keys(customerData.businesses);
+            let totalVisits = 0;
+            let availableRewards = 0;
+            let earnedRewards = 0;
+
+            businesses.forEach(businessName => {
+                const business = customerData.businesses[businessName];
+                totalVisits += business.visits;
+                earnedRewards += business.totalEarned || 0;
+                if (business.visits >= business.visitsRequired) {
+                    availableRewards++;
+                }
+            });
+
+            document.getElementById('totalBusinesses').textContent = businesses.length;
+            document.getElementById('totalVisits').textContent = totalVisits;
+            document.getElementById('availableRewards').textContent = availableRewards;
+            document.getElementById('earnedRewards').textContent = earnedRewards;
+
+            // Generate loyalty cards
+            generateLoyaltyCards(customerData.businesses);
         }
-    });
+
+        function generateLoyaltyCards(businesses) {
+            const container = document.getElementById('loyaltyCards');
+            container.innerHTML = '';
+
+            Object.entries(businesses).forEach(([businessName, data]) => {
+                const card = createLoyaltyCard(businessName, data);
+                container.appendChild(card);
+            });
+        }
+
+        function createLoyaltyCard(businessName, data) {
+            const card = document.createElement('div');
+            card.className = 'loyalty-card';
+            
+            const progress = Math.min((data.visits / data.visitsRequired) * 100, 100);
+            const hasReward = data.visits >= data.visitsRequired;
+            const businessIcon = getBusinessIcon(data.type);
+            
+            card.innerHTML = `
+                <div class="business-header">
+                    <div class="business-icon">${businessIcon}</div>
+                    <div class="business-info">
+                        <h3>${businessName}</h3>
+                        <div class="business-type">${data.type}</div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <div class="visits-count">${data.visits} visits</div>
+                        <div class="visits-needed">${data.visitsRequired} needed for reward</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                </div>
+
+                <div class="stamps-visual">
+                    ${generateStamps(data.visits, data.visitsRequired)}
+                </div>
+
+                ${hasReward ? `
+                    <div class="reward-available">
+                        <div class="reward-title">🎉 Reward Available!</div>
+                        <div class="reward-description">${data.rewardDescription}</div>
+                        <div class="reward-instructions">
+                            Show this to the staff at ${businessName} to redeem your reward!
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="last-visit">Last visit: ${formatDate(data.lastVisit)}</div>
+            `;
+
+            return card;
+        }
+
+        function generateStamps(visits, required) {
+            let stamps = '';
+            for (let i = 1; i <= required; i++) {
+                const isFilled = i <= visits;
+                stamps += `<div class="stamp ${isFilled ? 'filled' : 'empty'}">
+                    ${isFilled ? '✓' : i}
+                </div>`;
+            }
+            return stamps;
+        }
+
+        function getBusinessIcon(type) {
+            const icons = {
+                'salon': '💇‍♀️',
+                'barber': '💈',
+                'cafe': '☕',
+                'restaurant': '🍽️',
+                'other': '🏪'
+            };
+            return icons[type] || icons.other;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const diffTime = Math.abs(today - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        function showNoResults() {
+            document.getElementById('lookupSection').style.display = 'none';
+            document.getElementById('resultsSection').classList.add('active');
+            document.getElementById('customerSummary').style.display = 'none';
+            document.getElementById('loyaltyCards').style.display = 'none';
+            document.getElementById('noResults').style.display = 'block';
+        }
+
+        function goBack() {
+            document.getElementById('lookupSection').style.display = 'block';
+            document.getElementById('resultsSection').classList.remove('active');
+            document.getElementById('customerSummary').style.display = 'block';
+            document.getElementById('loyaltyCards').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerPhone').focus();
+        }
+
+        // Auto-focus on phone input when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('customerPhone').focus();
+        });
+
+        // Add some demo phone numbers for easy testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const demoNumbers = Object.keys(sampleCustomerData);
+            console.log('Demo phone numbers you can try:', demoNumbers.map(num => 
+                num.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')));
+        });

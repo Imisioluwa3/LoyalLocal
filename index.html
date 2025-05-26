@@ -3,131 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to LoyalLocal - Loyalty Rewards Made Simple</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>LoyalLocal - Phone-Based Loyalty Rewards</title>
     <link rel="stylesheet" href="style.css">
-    <script>
-        const SUPABASE_URL = 'https://mhwsjjumsiveahfckcwr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1od3NqanVtc2l2ZWFoZmNrY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMTc4MTQsImV4cCI6MjA2MzU5MzgxNH0.5varGB23DXpfi1adlwejmYwLlTbbjCPfKGDm9rWEQBo';
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
 </head>
 <body>
     <div class="container">
-        <!-- Navigation Bar -->
-        <nav class="navbar">
-            <a href="index.html" class="logo"><span class="logo-symbol">💈</span>LoyalLocal</a>
-            <ul class="nav-links">
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="business/index.html">Business Portal</a></li>
-                <li><a href="customer/index.html">Check Rewards</a></li>
-                <li><a href="business/index.html#registerForm" class="cta-nav">Sign Up Your Business</a></li>
-            </ul>
-        </nav>
+        <div class="header">
+            <h1>💈 LoyalLocal</h1>
+            <p>Simple Phone-Based Loyalty Rewards for Local Businesses</p>
+        </div>
 
-        <!-- Hero Section -->
-        <header class="hero-section">
-            <h1>Retain Loyal Customers, Effortlessly.</h1>
-            <p class="subtitle">LoyalLocal is a simple, phone-number-based loyalty system designed to help local salons, barbershops, and eateries thrive by rewarding their frequent customers.</p>
-            <a href="business/index.html" class="hero-cta-button">Get Started for Free</a>
-        </header>
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-container">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('login')">Login</button>
+                <button class="tab" onclick="switchTab('register')">Register Business</button>
+            </div>
 
-        <!-- How It Works Section -->
-        <section id="how-it-works" class="content-section">
-            <h2>How LoyalLocal Works</h2>
-            <div class="how-it-works-grid">
-                <div class="step-card">
-                    <div class="icon">1️⃣</div>
-                    <h3>Business Setup</h3>
-                    <p>Businesses quickly register and define their simple loyalty program (e.g., "5th visit gets 50% off").</p>
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your business email">
                 </div>
-                <div class="step-card">
-                    <div class="icon">📱</div>
-                    <h3>Log Visits</h3>
-                    <p>At checkout, businesses enter the customer's phone number to log a visit or purchase. No apps for customers to download!</p>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
                 </div>
-                <div class="step-card">
-                    <div class="icon">🎁</div>
-                    <h3>Earn & Redeem</h3>
-                    <p>The system tracks progress. When a reward is earned, it's flagged for easy redemption on the next visit.</p>
+                <button class="btn" onclick="login()">Login to Dashboard</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" placeholder="Your Salon/Barber/Restaurant Name">
+                </div>
+                <div class="form-group">
+                    <label for="businessType">Business Type</label>
+                    <select id="businessType">
+                        <option value="">Select Business Type</option>
+                        <option value="salon">Hair Salon</option>
+                        <option value="barber">Barbershop</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="cafe">Café</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="businessEmail">Business Email</label>
+                    <input type="email" id="businessEmail" placeholder="business@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="businessPassword">Password</label>
+                    <input type="password" id="businessPassword" placeholder="Create a secure password">
+                </div>
+                <div class="form-group">
+                    <label for="businessAddress">Business Address</label>
+                    <input type="text" id="businessAddress" placeholder="123 Main St, City, State">
+                </div>
+                <button class="btn" onclick="register()">Create Business Account</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="dashboard">
+            <div class="navigation">
+                <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+                <button class="nav-btn" onclick="showSection('customers')">Customers</button>
+                <button class="nav-btn" onclick="showSection('settings')">Settings</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overviewSection">
+                <div class="dashboard-header">
+                    <h2 id="businessNameDisplay">Welcome to Your Dashboard</h2>
+                    <p>Manage your loyalty program and track customer visits</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalCustomers">0</span>
+                        <div class="stat-label">Total Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="visitsToday">0</span>
+                        <div class="stat-label">Visits Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="rewardsRedeemed">0</span>
+                        <div class="stat-label">Rewards Redeemed</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="rewardsEarned">0</span>
+                        <div class="stat-label">Rewards Earned</div>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Features Section -->
-        <section id="features" class="content-section">
-            <h2>Key Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="icon">📞</div>
-                    <h3>Phone Number Based</h3>
-                    <p>Uses familiar phone numbers as unique identifiers. No need for physical cards or complex QR codes.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">⚙️</div>
-                    <h3>Simple for Businesses</h3>
-                    <p>Easy setup and an intuitive dashboard for managing customers and tracking loyalty progress.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">😃</div>
-                    <h3>Frictionless for Customers</h3>
-                    <p>Customers don't need to download an app. They just provide their phone number to participate.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">📈</div>
-                    <h3>Boost Retention</h3>
-                    <p>Encourage repeat business by rewarding customer loyalty and making them feel valued.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">💬</div>
-                    <h3>Optional SMS Alerts</h3>
-                    <p>Keep customers engaged with automated SMS notifications for new enrollments and earned rewards (with consent).</p>
-                </div>
-                 <div class="feature-card">
-                    <div class="icon">📊</div>
-                    <h3>Basic Insights</h3>
-                    <p>Track key metrics like total customers, visits, and rewards redeemed to see your program's success.</p>
+            <!-- Customer Management Section -->
+            <div id="customersSection" style="display: none;">
+                <div class="main-actions">
+                    <div class="action-section">
+                        <h3>🔍 Look Up Customer</h3>
+                        <div class="phone-input">
+                            <input type="tel" id="customerPhone" placeholder="Enter phone number (e.g., 555-123-4567)">
+                            <button onclick="lookupCustomer()">Look Up</button>
+                        </div>
+                    </div>
+
+                    <div id="customerDisplay" style="display: none;">
+                        <div class="customer-info">
+                            <h4 id="customerName">Customer Name</h4>
+                            <p id="customerPhoneDisplay">Phone: </p>
+                            <p id="visitCount">Visits: 0</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                            </div>
+                            <p id="progressText">0 visits towards reward</p>
+                        </div>
+
+                        <div id="rewardSection" class="reward-available" style="display: none;">
+                            <h4>🎉 Reward Available!</h4>
+                            <p id="rewardDescription">Customer has earned a reward!</p>
+                            <button class="redeem-btn" onclick="redeemReward()">Redeem Reward</button>
+                        </div>
+
+                        <div class="phone-input">
+                            <button onclick="logVisit()" style="background: #667eea; flex: 1;">Log Visit</button>
+                        </div>
+                    </div>
+
+                    <div id="newCustomerForm" style="display: none;">
+                        <div class="customer-info">
+                            <h4>New Customer</h4>
+                            <div class="form-group">
+                                <label for="newCustomerName">Customer Name (Optional)</label>
+                                <input type="text" id="newCustomerName" placeholder="Enter customer name">
+                            </div>
+                            <button class="btn" onclick="addNewCustomer()">Add Customer & Log First Visit</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Benefits Section -->
-        <section id="benefits" class="content-section">
-            <h2>Benefits for Your Business</h2>
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="icon">💖</div>
-                    <h3>Increased Customer Loyalty</h3>
-                    <p>Make customers feel appreciated and give them a reason to choose your business over competitors.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">💰</div>
-                    <h3>Drive Repeat Business</h3>
-                    <p>Loyalty programs are proven to increase visit frequency and customer lifetime value.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">📢</div>
-                    <h3>Positive Word-of-Mouth</h3>
-                    <p>Happy, rewarded customers are more likely to recommend your business to friends and family.</p>
+            <!-- Settings Section -->
+            <div id="settingsSection" style="display: none;">
+                <div class="settings-panel">
+                    <h3>⚙️ Loyalty Program Configuration</h3>
+                    <div class="loyalty-config">
+                        <div class="form-group">
+                            <label for="visitsRequired">Visits Required for Reward</label>
+                            <input type="number" id="visitsRequired" value="5" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="rewardDescription">Reward Description</label>
+                            <input type="text" id="rewardDescription" value="50% off next service" placeholder="e.g., Free coffee, 20% off">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="smsNotifications" checked> Enable SMS Notifications
+                        </label>
+                        <small style="display: block; color: #666; margin-top: 5px;">
+                            Send welcome messages and reward notifications to customers
+                        </small>
+                    </div>
+                    <button class="btn" onclick="saveSettings()">Save Settings</button>
                 </div>
             </div>
-        </section>
-        
-        <!-- Call to Action Section -->
-        <section class="hero-section" style="background: rgba(0,0,0,0.15); margin-top:50px;">
-             <h2>Ready to Grow Your Loyal Customer Base?</h2>
-             <p class="subtitle">Join LoyalLocal today and start building stronger relationships with your customers. It's simple, effective, and designed for businesses like yours.</p>
-             <a href="business/index.html#registerForm" class="hero-cta-button" style="background: #667eea; color: white;">Register Your Business Now</a>
-        </section>
-
+        </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>© <span id="currentYear"></span> LoyalLocal. All rights reserved. A simple solution for local businesses.</p>
-        <p>Built with <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank" rel="noopener">HTML</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" rel="noopener">CSS</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener">JavaScript</a>.</p>
-    </footer>
-
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

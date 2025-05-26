@@ -26,12 +26,17 @@
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" placeholder="Enter your business email">
+                    <div class="error-message">Please enter a valid email</div>
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" placeholder="Enter your password">
                 </div>
-                <button class="btn">Login to Dashboard</button>
+                <button type="button" class="btn" onclick="login()">Login to Dashboard</button>
+
+                <div id="authLoading" style="display: none; text-align: center; margin-top: 15px;">
+                    <div class="loader"></div>
+                </div>
             </div>
 
             <!-- Register Form -->
@@ -63,7 +68,11 @@
                     <label for="businessAddress">Business Address</label>
                     <input type="text" id="businessAddress" placeholder="123 Main St, City, State">
                 </div>
-                <button class="btn">Create Business Account</button>
+                <button type="button" class="btn" onclick="register()">Create Business Account</button>
+
+                <div id="authLoading" style="display: none; text-align: center; margin-top: 15px;">
+                    <div class="loader"></div>
+                </div>
             </div>
         </div>
 
@@ -73,6 +82,16 @@
                 <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
                 <button class="nav-btn" onclick="showSection('customers')">Customers</button>
                 <button class="nav-btn" onclick="showSection('settings')">Settings</button>
+            </div>
+
+            <div id="dashboardLoading" style="display: none; text-align: center; margin: 20px 0;">
+                <div class="loader"></div>
+            </div>
+
+            <div class="dashboard-header">
+                <h2 id="businessNameDisplay">Welcome to Your Dashboard</h2>
+                <p>Manage your loyalty program and track customer visits</p>
+                <button class="btn logout-btn" onclick="logout()" style="margin-top: 15px;">Logout</button>
             </div>
 
             <!-- Overview Section -->
@@ -180,6 +199,7 @@
     <div id="notification" class="notification">
         <span id="notificationText"></span>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
