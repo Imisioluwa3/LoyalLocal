@@ -192,7 +192,7 @@ body {
 }
 
 .business-type {
-    color: #666;
+    color: #555;
     font-size: 0.9rem;
     text-transform: capitalize;
 }
@@ -216,7 +216,7 @@ body {
 
 .visits-needed {
     font-size: 0.9rem;
-    color: #666;
+    color: #555;
 }
 
 .progress-bar {
@@ -421,6 +421,40 @@ body {
     transform: translateY(-20px);
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+    border-radius: 4px;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+input:focus,
+button:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -507,5 +541,14 @@ body {
         width: 35px;
         height: 35px;
         font-size: 1rem;
+    }
+}
+
+/* Ensure animations respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

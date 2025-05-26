@@ -8,68 +8,91 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>💈 LoyalLocal</h1>
-            <p>Check Your Loyalty Rewards</p>
-            <small>Enter your phone number to see your rewards across all participating businesses</small>
-        </div>
-
-        <!-- Phone Number Lookup -->
-        <div id="lookupSection" class="lookup-container">
-            <div class="lookup-form">
-                <div class="form-group">
-                    <label for="customerPhone">Your Phone Number</label>
-                    <div class="phone-input">
-                        <input type="tel" id="customerPhone" placeholder="+234 817 072 4872" maxlength="15">
-                    </div>
-                </div>
-                <button class="btn" onclick="lookupRewards()">
-                    <span id="btnText">Check My Rewards</span>
-                </button>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <main id="main-content" class="container">
+        <div class="container">
+            <div class="header">
+                <h1>💈 LoyalLocal</h1>
+                <p>Check Your Loyalty Rewards</p>
+                <small>Enter your phone number to see your rewards across all participating businesses</small>
             </div>
-        </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="results-container">
-            <button class="back-btn" onclick="goBack()">← Check Another Number</button>
-            
-            <!-- Customer Summary -->
-            <div id="customerSummary" class="customer-summary">
-                <h2 id="welcomeMessage">Welcome back!</h2>
-                <p id="phoneDisplay">Phone: (555) 123-4567</p>
-                <div class="summary-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" id="totalBusinesses">0</span>
-                        <div class="stat-label">Businesses</div>
+            <!-- Phone Number Lookup -->
+            <div id="lookupSection" class="lookup-container">
+                <div class="lookup-form">
+                    <div class="form-group">
+                        <label for="customerPhone">Your Phone Number</label>
+                        <div class="phone-input">
+                            <input 
+                                type="tel" 
+                                id="customerPhone" 
+                                placeholder="+234 817 072 4872" 
+                                maxlength="17"
+                                aria-describedby="phone-help"
+                                aria-required="true"
+                                autocomplete="tel"
+                            >
+                            <div id="phone-help" class="sr-only">
+                                Enter your Nigerian phone number starting with +234
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="totalVisits">0</span>
-                        <div class="stat-label">Total Visits</div>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="availableRewards">0</span>
-                        <div class="stat-label">Available Rewards</div>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="earnedRewards">0</span>
-                        <div class="stat-label">Total Earned</div>
+                    <button
+                        class="btn" 
+                        onclick="lookupRewards()"
+                        aria-describedby="btn-help"
+                        type="button"
+                        >
+                        <span id="btnText">Check My Rewards</span>
+                    </button>
+                    <div id="btn-help" class="sr-only">
+                        Search for your loyalty rewards across all participating businesses
                     </div>
                 </div>
             </div>
 
-            <!-- Loyalty Cards -->
-            <div id="loyaltyCards"></div>
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-container">
+                <button class="back-btn" onclick="goBack()">← Check Another Number</button>
+                
+                <!-- Customer Summary -->
+                <div id="customerSummary" class="customer-summary">
+                    <h2 id="welcomeMessage">Welcome back!</h2>
+                    <p id="phoneDisplay">Phone: (555) 123-4567</p>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalBusinesses">0</span>
+                            <div class="stat-label">Businesses</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalVisits">0</span>
+                            <div class="stat-label">Total Visits</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="availableRewards">0</span>
+                            <div class="stat-label">Available Rewards</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="earnedRewards">0</span>
+                            <div class="stat-label">Total Earned</div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- No Results -->
-            <div id="noResults" class="no-results" style="display: none;">
-                <div class="no-results-icon">📱</div>
-                <h3>Phone Number Not Found</h3>
-                <p>This phone number isn't registered with any LoyalLocal businesses yet.</p>
-                <p style="margin-top: 15px; color: #666;">Visit a participating business and provide your phone number to start earning rewards!</p>
+                <!-- Loyalty Cards -->
+                <div id="loyaltyCards"></div>
+
+                <!-- No Results -->
+                <div id="noResults" class="no-results" style="display: none;">
+                    <div class="no-results-icon">📱</div>
+                    <h3>Phone Number Not Found</h3>
+                    <p>This phone number isn't registered with any LoyalLocal businesses yet.</p>
+                    <p style="margin-top: 15px; color: #666;">Visit a participating business and provide your phone number to start earning rewards!</p>
+                </div>
             </div>
-        </div>
     </div>
+    </main>
+
 
     <script src="script.js"></script>
 </body>
