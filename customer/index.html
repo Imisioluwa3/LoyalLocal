@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoyalLocal - Check Your Rewards</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -20,7 +21,7 @@
                 <div class="form-group">
                     <label for="customerPhone">Your Phone Number</label>
                     <div class="phone-input">
-                        <input type="tel" id="customerPhone" placeholder="(555) 123-4567" maxlength="14">
+                        <input type="tel" id="customerPhone" placeholder="+234 817 072 4872" maxlength="15">
                     </div>
                 </div>
                 <button class="btn" onclick="lookupRewards()">
