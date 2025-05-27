@@ -56,7 +56,6 @@ To provide small and medium-sized businesses with an effective, affordable, and 
 - Responsive web design for all devices
 
 **Backend**
-- Node.js with Express.js framework
 - RESTful API architecture
 - JWT-based authentication
 
