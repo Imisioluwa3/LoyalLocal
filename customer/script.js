@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Initialize Supabase client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
-        persistSession: true,
-        autoRefreshToken: true
+        persistSession: false, // Changed from true to false for customer portal
+        autoRefreshToken: false
     }
 });
 
@@ -16,53 +16,71 @@ let notificationTimeout;
 let isOnline = navigator.onLine;
 
 // Phone number validation and formatting
-document.getElementById('customerPhone').addEventListener('input', function(e) {
-    clearTimeout(phoneInputTimeout);
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('customerPhone');
     
-    phoneInputTimeout = setTimeout(() => {
-        let value = e.target.value.replace(/\D/g, '');
+    phoneInput.addEventListener('input', function(e) {
+        clearTimeout(phoneInputTimeout);
         
-        // Auto-add country code if user starts with local number
-        if (value.length > 0 && !value.startsWith('234')) {
-            // If starts with 0, replace with 234
-            if (value.startsWith('0')) {
-                value = '234' + value.substring(1);
+        phoneInputTimeout = setTimeout(() => {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Auto-add country code if user starts with local number
+            if (value.length > 0 && !value.startsWith('234')) {
+                // If starts with 0, replace with 234
+                if (value.startsWith('0')) {
+                    value = '234' + value.substring(1);
+                }
+                // If starts with 7,8,9 (common Nigerian prefixes), add 234
+                else if (/^[789]/.test(value)) {
+                    value = '234' + value;
+                }
             }
-            // If starts with 7,8,9 (common Nigerian prefixes), add 234
-            else if (/^[789]/.test(value)) {
-                value = '234' + value;
+            
+            // Format as +234 817 072 4872
+            let formatted = '';
+            if (value.length > 0) {
+                formatted = '+' + value.substring(0, 3);
+                if (value.length > 3) {
+                    formatted += ' ' + value.substring(3, 6);
+                }
+                if (value.length > 6) {
+                    formatted += ' ' + value.substring(6, 9);
+                }
+                if (value.length > 9) {
+                    formatted += ' ' + value.substring(9, 13);
+                }
             }
-        }
-        
-        // Format as +234 817 072 4872
-        let formatted = '';
-        if (value.length > 0) {
-            formatted = '+' + value.substring(0, 3);
-            if (value.length > 3) {
-                formatted += ' ' + value.substring(3, 6);
+            
+            // Limit to valid Nigerian phone number length
+            if (value.length > 13) {
+                formatted = formatted.substring(0, 17); // +234 817 072 4872
             }
-            if (value.length > 6) {
-                formatted += ' ' + value.substring(6, 9);
-            }
-            if (value.length > 9) {
-                formatted += ' ' + value.substring(9, 13);
-            }
-        }
-        
-        // Limit to valid Nigerian phone number length
-        if (value.length > 13) {
-            formatted = formatted.substring(0, 17); // +234 817 072 4872
-        }
-        
-        e.target.value = formatted;
-    }, 100); // Debounce for 100ms
-});
+            
+            e.target.value = formatted;
+        }, 100); // Debounce for 100ms
+    });
 
-// Enter key support for phone input
-document.getElementById('customerPhone').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        lookupRewards();
-    }
+    // Enter key support for phone input
+    phoneInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            lookupRewards();
+        }
+    });
+
+    // Auto-focus on phone input when page loads
+    phoneInput.focus();
+    
+    // Add keyboard navigation support
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const resultsSection = document.getElementById('resultsSection');
+            if (resultsSection && resultsSection.classList.contains('active')) {
+                goBack();
+            }
+        }
+    });
 });
 
 // Phone number validation function
@@ -94,6 +112,7 @@ function validatePhoneNumber(phoneInput) {
 }
 
 // Main lookup function with improved error handling
+// Enhanced lookup function with better error handling and flexible phone number matching
 async function lookupRewards() {
     // Check internet connection
     if (!isOnline) {
@@ -101,11 +120,17 @@ async function lookupRewards() {
         return;
     }
 
-    const phoneInput = document.getElementById('customerPhone').value;
-    const validation = validatePhoneNumber(phoneInput);
+    const phoneInput = document.getElementById('customerPhone');
+    if (!phoneInput) {
+        console.error('Phone input element not found');
+        return;
+    }
+
+    const validation = validatePhoneNumber(phoneInput.value);
     
     if (!validation.isValid) {
         showNotification(validation.message, 'error');
+        phoneInput.focus();
         return;
     }
 
@@ -113,36 +138,117 @@ async function lookupRewards() {
     const btnText = document.getElementById('btnText');
     const phoneNumber = validation.phoneNumber;
     
+    if (!btn || !btnText) {
+        console.error('Button elements not found');
+        return;
+    }
+    
     // Show loading state
     btn.disabled = true;
     btnText.textContent = 'Searching...';
     btn.classList.add('loading');
 
     try {
-        const { data: visits, error } = await supabase
-            .from('visits')
-            .select(`
-                *,
-                businesses:business_id (
-                    name,
-                    type,
-                    loyalty_visits_required,
-                    loyalty_reward_description
-                )
-            `)
-            .eq('customer_phone_number', phoneNumber)
-            .order('created_at', { ascending: false });
+        // Create multiple phone number variations for flexible matching
+        const phoneVariations = generatePhoneVariations(phoneNumber);
+        console.log('Searching for phone variations:', phoneVariations);
 
-        if (error) {
-            console.error('Supabase error:', error);
-            throw new Error(getErrorMessage(error));
+        // First, let's check if the visits table exists and has data
+        const { data: testData, error: testError } = await supabase
+            .from('visits')
+            .select('*')
+            .limit(1);
+
+        if (testError) {
+            console.error('Table access error:', testError);
+            throw new Error(`Database error: ${testError.message}`);
         }
 
-        if (visits.length === 0) {
+        console.log('Table access successful, sample data:', testData);
+
+        // Try multiple queries with different phone number formats
+        let visits = null;
+        let queryError = null;
+
+        for (const phoneVariation of phoneVariations) {
+            try {
+                console.log(`Trying phone format: ${phoneVariation}`);
+                
+                const { data, error } = await supabase
+                    .from('visits')
+                    .select(`
+                        *,
+                        businesses:business_id (
+                            name,
+                            type,
+                            loyalty_visits_required,
+                            loyalty_reward_description
+                        )
+                    `)
+                    .eq('customer_phone_number', phoneVariation)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error(`Query error for ${phoneVariation}:`, error);
+                    queryError = error;
+                    continue;
+                }
+
+                if (data && data.length > 0) {
+                    console.log(`Found ${data.length} visits for ${phoneVariation}`);
+                    visits = data;
+                    break;
+                }
+            } catch (err) {
+                console.error(`Exception for ${phoneVariation}:`, err);
+                continue;
+            }
+        }
+
+        // If no visits found with any format, try a broader search
+        if (!visits || visits.length === 0) {
+            console.log('No exact matches found, trying broader search...');
+            
+            // Try searching with LIKE operator for partial matches
+            const cleanNumber = phoneNumber.replace(/\D/g, '');
+            const numberSuffix = cleanNumber.slice(-10); // Last 10 digits
+            
+            const { data: likeData, error: likeError } = await supabase
+                .from('visits')
+                .select(`
+                    *,
+                    businesses:business_id (
+                        name,
+                        type,
+                        loyalty_visits_required,
+                        loyalty_reward_description
+                    )
+                `)
+                .like('customer_phone_number', `%${numberSuffix}`)
+                .order('created_at', { ascending: false });
+
+            if (!likeError && likeData && likeData.length > 0) {
+                console.log(`Found ${likeData.length} visits with LIKE search`);
+                visits = likeData;
+            }
+        }
+
+        // Handle results
+        if (!visits || visits.length === 0) {
+            console.log('No visits found for phone number');
             showNoResults();
         } else {
-            const customerData = transformVisitData(visits, phoneNumber);
-            displayResults(customerData, phoneInput);
+            // Filter out visits with null business data
+            const validVisits = visits.filter(visit => visit.businesses && visit.businesses.name);
+            
+            if (validVisits.length === 0) {
+                console.log('No valid business data found');
+                showNoResults();
+            } else {
+                console.log(`Processing ${validVisits.length} valid visits`);
+                const customerData = transformVisitData(validVisits, phoneNumber);
+                displayResults(customerData, phoneInput.value);
+            }
         }
 
     } catch (error) {
@@ -163,8 +269,48 @@ async function lookupRewards() {
     }
 }
 
+// Generate different phone number format variations for flexible matching
+function generatePhoneVariations(phoneNumber) {
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    const variations = new Set();
+    
+    // Original format
+    variations.add(cleanNumber);
+    
+    // With + prefix
+    variations.add('+' + cleanNumber);
+    
+    // Formatted versions
+    if (cleanNumber.startsWith('234')) {
+        const localNumber = cleanNumber.substring(3);
+        
+        // +234 817 072 4872
+        variations.add(`+234 ${localNumber.substring(0,3)} ${localNumber.substring(3,6)} ${localNumber.substring(6)}`);
+        
+        // +234-817-072-4872
+        variations.add(`+234-${localNumber.substring(0,3)}-${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
+        
+        // +234.817.072.4872
+        variations.add(`+234.${localNumber.substring(0,3)}.${localNumber.substring(3,6)}.${localNumber.substring(6)}`);
+        
+        // (234) 817-072-4872
+        variations.add(`(234) ${localNumber.substring(0,3)}-${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
+        
+        // 0817072472 (local format)
+        variations.add('0' + localNumber);
+        
+        // +234(817)072-4872
+        variations.add(`+234(${localNumber.substring(0,3)})${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
+    }
+    
+    return Array.from(variations);
+}
+
+
 // Helper function to translate error codes to user-friendly messages
 function getErrorMessage(error) {
+    if (!error) return 'An unexpected error occurred';
+    
     switch (error.code) {
         case 'PGRST116':
             return 'Service temporarily unavailable. Please try again later.';
@@ -172,28 +318,36 @@ function getErrorMessage(error) {
             return 'Unable to connect to the database. Please check your connection.';
         case '42P01':
             return 'Data temporarily unavailable. Please try again later.';
+        case 'PGRST000':
+            return 'Database connection error. Please try again.';
         default:
             return error.message || 'An unexpected error occurred. Please try again.';
     }
 }
 
-// Fixed data processing logic
+// Fixed data processing logic with better error handling
 function transformVisitData(visits, phoneNumber) {
     const businessesMap = {};
     let customerName = '';
     let mostRecentNameDate = null;
     
     visits.forEach(visit => {
+        // Skip visits without valid business data
+        if (!visit.businesses || !visit.businesses.name) {
+            console.warn('Skipping visit with invalid business data:', visit);
+            return;
+        }
+
         const business = visit.businesses;
         const businessName = business.name;
         
         if (!businessesMap[businessName]) {
             businessesMap[businessName] = {
-                type: business.type,
+                type: business.type || 'other',
                 currentVisits: 0, // Visits counting toward next reward
                 totalVisits: 0,   // All visits ever made
-                visitsRequired: business.loyalty_visits_required,
-                rewardDescription: business.loyalty_reward_description,
+                visitsRequired: Math.max(1, business.loyalty_visits_required || 10), // Ensure minimum of 1
+                rewardDescription: business.loyalty_reward_description || 'Free service',
                 lastVisit: visit.created_at,
                 totalEarned: 0,
                 availableRewards: 0
@@ -217,13 +371,16 @@ function transformVisitData(visits, phoneNumber) {
         businessData.availableRewards = Math.floor(businessData.currentVisits / businessData.visitsRequired);
         
         // Get the most recent customer name
-        const visitDate = new Date(visit.created_at);
-        if (visit.customer_name && (!mostRecentNameDate || visitDate > mostRecentNameDate)) {
-            customerName = visit.customer_name;
-            mostRecentNameDate = visitDate;
+        if (visit.customer_name) {
+            const visitDate = new Date(visit.created_at);
+            if (!mostRecentNameDate || visitDate > mostRecentNameDate) {
+                customerName = visit.customer_name;
+                mostRecentNameDate = visitDate;
+            }
         }
         
         // Track most recent visit date
+        const visitDate = new Date(visit.created_at);
         const storedDate = new Date(businessData.lastVisit);
         if (visitDate > storedDate) {
             businessData.lastVisit = visit.created_at;
@@ -236,19 +393,34 @@ function transformVisitData(visits, phoneNumber) {
     };
 }
 
-// Display results with corrected data processing
+// Display results with improved error handling
 function displayResults(customerData, phoneNumber) {
-    document.getElementById('lookupSection').style.display = 'none';
-    document.getElementById('resultsSection').classList.add('active');
+    const lookupSection = document.getElementById('lookupSection');
+    const resultsSection = document.getElementById('resultsSection');
+    
+    if (!lookupSection || !resultsSection) {
+        console.error('Required sections not found');
+        return;
+    }
+
+    lookupSection.style.display = 'none';
+    resultsSection.classList.add('active');
 
     // Format phone number for display
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     const formattedPhone = `+${cleanNumber.substring(0, 3)} ${cleanNumber.substring(3, 6)} ${cleanNumber.substring(6, 9)} ${cleanNumber.substring(9)}`;
 
     // Update customer summary
-    document.getElementById('welcomeMessage').textContent = 
-        customerData.name ? `Welcome back, ${customerData.name}!` : 'Welcome back!';
-    document.getElementById('phoneDisplay').textContent = `Phone: ${formattedPhone.trim()}`;
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const phoneDisplay = document.getElementById('phoneDisplay');
+    
+    if (welcomeMessage) {
+        welcomeMessage.textContent = customerData.name ? `Welcome back, ${customerData.name}!` : 'Welcome back!';
+    }
+    
+    if (phoneDisplay) {
+        phoneDisplay.textContent = `Phone: ${formattedPhone.trim()}`;
+    }
 
     // Calculate summary stats
     const businesses = Object.keys(customerData.businesses);
@@ -263,24 +435,44 @@ function displayResults(customerData, phoneNumber) {
         availableRewards += business.availableRewards;
     });
 
-    document.getElementById('totalBusinesses').textContent = businesses.length;
-    document.getElementById('totalVisits').textContent = totalVisits;
-    document.getElementById('availableRewards').textContent = availableRewards;
-    document.getElementById('earnedRewards').textContent = earnedRewards;
+    // Update summary stats with null checks
+    updateElementText('totalBusinesses', businesses.length);
+    updateElementText('totalVisits', totalVisits);
+    updateElementText('availableRewards', availableRewards);
+    updateElementText('earnedRewards', earnedRewards);
 
     generateLoyaltyCards(customerData.businesses);
 }
 
-// Optimized loyalty card generation
+// Helper function to safely update element text
+function updateElementText(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
+    } else {
+        console.warn(`Element with ID '${elementId}' not found`);
+    }
+}
+
+// Optimized loyalty card generation with error handling
 function generateLoyaltyCards(businesses) {
     const container = document.getElementById('loyaltyCards');
+    
+    if (!container) {
+        console.error('Loyalty cards container not found');
+        return;
+    }
     
     // Use DocumentFragment for efficient DOM updates
     const fragment = document.createDocumentFragment();
     
     Object.entries(businesses).forEach(([businessName, data]) => {
-        const card = createLoyaltyCard(businessName, data);
-        fragment.appendChild(card);
+        try {
+            const card = createLoyaltyCard(businessName, data);
+            fragment.appendChild(card);
+        } catch (error) {
+            console.error(`Error creating card for ${businessName}:`, error);
+        }
     });
     
     // Clear container and append all cards at once
@@ -288,126 +480,186 @@ function generateLoyaltyCards(businesses) {
     container.appendChild(fragment);
 }
 
-// Create loyalty card with updated logic
+// Create loyalty card with updated logic and better error handling
 function createLoyaltyCard(businessName, data) {
     const card = document.createElement('div');
     card.className = 'loyalty-card';
     
+    // Ensure data integrity
+    const visitsRequired = Math.max(1, data.visitsRequired || 10);
+    const currentVisits = Math.max(0, data.currentVisits || 0);
+    const availableRewards = Math.max(0, data.availableRewards || 0);
+    
     // Calculate progress based on current visits toward next reward
-    const visitsForProgress = data.currentVisits % data.visitsRequired;
-    const progress = Math.min((visitsForProgress / data.visitsRequired) * 100, 100);
-    const hasReward = data.availableRewards > 0;
+    const visitsForProgress = currentVisits % visitsRequired;
+    const progress = Math.min((visitsForProgress / visitsRequired) * 100, 100);
+    const hasReward = availableRewards > 0;
     const businessIcon = getBusinessIcon(data.type);
     
     card.innerHTML = `
         <div class="business-header">
             <div class="business-icon">${businessIcon}</div>
             <div class="business-info">
-                <h3>${businessName}</h3>
-                <div class="business-type">${data.type}</div>
+                <h3>${escapeHtml(businessName)}</h3>
+                <div class="business-type">${escapeHtml(data.type || 'other')}</div>
             </div>
         </div>
         <div class="progress-section">
             <div class="progress-header">
                 <div class="visits-count">${visitsForProgress} visits</div>
-                <div class="visits-needed">${data.visitsRequired} needed for reward</div>
+                <div class="visits-needed">${visitsRequired} needed for reward</div>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${progress}%"></div>
             </div>
         </div>
-        <div class="stamps-visual">
-            ${generateStamps(visitsForProgress, data.visitsRequired)}
+        <div class="stamps-visual" role="group" aria-label="Visit progress">
+            ${generateStamps(visitsForProgress, visitsRequired)}
         </div>
         ${hasReward ? `
             <div class="reward-available">
-                <div class="reward-title">🎉 ${data.availableRewards} Reward${data.availableRewards > 1 ? 's' : ''} Available!</div>
-                <div class="reward-description">${data.rewardDescription}</div>
+                <div class="reward-title">🎉 ${availableRewards} Reward${availableRewards > 1 ? 's' : ''} Available!</div>
+                <div class="reward-description">${escapeHtml(data.rewardDescription || 'Free service')}</div>
                 <div class="reward-instructions">
-                    Show this to the staff at ${businessName} to redeem your reward${data.availableRewards > 1 ? 's' : ''}!
+                    Show this to the staff at ${escapeHtml(businessName)} to redeem your reward${availableRewards > 1 ? 's' : ''}!
                 </div>
             </div>
         ` : ''}
         <div class="card-footer">
             <div class="last-visit">Last visit: ${formatDate(data.lastVisit)}</div>
-            <div class="total-stats">Total visits: ${data.totalVisits} | Rewards earned: ${data.totalEarned}</div>
+            <div class="total-stats">Total visits: ${data.totalVisits || 0} | Rewards earned: ${data.totalEarned || 0}</div>
         </div>
     `;
     return card;
 }
 
-// Generate stamp visualization
+// Helper function to escape HTML to prevent XSS
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Generate stamp visualization with better accessibility
 function generateStamps(visits, required) {
     let stamps = '';
-    for (let i = 1; i <= required; i++) {
+    const maxStamps = Math.min(required, 10); // Limit stamps for better mobile display
+    
+    for (let i = 1; i <= maxStamps; i++) {
         const isFilled = i <= visits;
         stamps += `<div class="stamp ${isFilled ? 'filled' : 'empty'}" aria-label="${isFilled ? 'Visit completed' : `Visit ${i} needed`}">
             ${isFilled ? '✓' : i}
         </div>`;
     }
+    
+    // If there are more stamps than we can display, show a summary
+    if (required > maxStamps) {
+        stamps += `<div class="stamp-summary">+${required - maxStamps} more</div>`;
+    }
+    
     return stamps;
 }
 
-// Business icon mapping with lazy loading
+// Business icon mapping with fallback
 function getBusinessIcon(type) {
-    const iconMap = new Map([
-        ['salon', '💇‍♀️'],
-        ['barber', '💈'],
-        ['cafe', '☕'],
-        ['restaurant', '🍽️'],
-        ['other', '🏪']
-    ]);
+    const iconMap = {
+        'salon': '💇‍♀️',
+        'barber': '💈',
+        'cafe': '☕',
+        'restaurant': '🍽️',
+        'retail': '🛍️',
+        'service': '🔧',
+        'other': '🏪'
+    };
     
-    return iconMap.get(type) || iconMap.get('other');
+    return iconMap[type] || iconMap['other'];
 }
 
-// Improved date formatting
+// Improved date formatting with error handling
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} week${Math.ceil(diffDays / 7) > 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString('en-NG', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-    });
+    try {
+        const date = new Date(dateString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return 'Unknown date';
+        }
+        
+        const today = new Date();
+        const diffTime = Math.abs(today - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        if (diffDays < 30) return `${Math.ceil(diffDays / 7)} week${Math.ceil(diffDays / 7) > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleDateString('en-NG', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Unknown date';
+    }
 }
 
-// Show no results page
+// Show no results page with improved error handling
 function showNoResults() {
-    document.getElementById('lookupSection').style.display = 'none';
-    document.getElementById('resultsSection').classList.add('active');
-    document.getElementById('customerSummary').style.display = 'none';
-    document.getElementById('loyaltyCards').style.display = 'none';
-    document.getElementById('noResults').style.display = 'block';
+    const lookupSection = document.getElementById('lookupSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const customerSummary = document.getElementById('customerSummary');
+    const loyaltyCards = document.getElementById('loyaltyCards');
+    const noResults = document.getElementById('noResults');
+    
+    if (lookupSection) lookupSection.style.display = 'none';
+    if (resultsSection) resultsSection.classList.add('active');
+    if (customerSummary) customerSummary.style.display = 'none';
+    if (loyaltyCards) loyaltyCards.style.display = 'none';
+    if (noResults) noResults.style.display = 'block';
 }
 
-// Navigation back to search
+// Navigation back to search with improved error handling
 function goBack() {
-    document.getElementById('lookupSection').style.display = 'block';
-    document.getElementById('resultsSection').classList.remove('active');
-    document.getElementById('customerSummary').style.display = 'block';
-    document.getElementById('loyaltyCards').style.display = 'block';
-    document.getElementById('noResults').style.display = 'none';
-    document.getElementById('customerPhone').value = '';
-    document.getElementById('customerPhone').focus();
+    const lookupSection = document.getElementById('lookupSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const customerSummary = document.getElementById('customerSummary');
+    const loyaltyCards = document.getElementById('loyaltyCards');
+    const noResults = document.getElementById('noResults');
+    const phoneInput = document.getElementById('customerPhone');
+    
+    if (lookupSection) lookupSection.style.display = 'block';
+    if (resultsSection) resultsSection.classList.remove('active');
+    if (customerSummary) customerSummary.style.display = 'block';
+    if (loyaltyCards) loyaltyCards.style.display = 'block';
+    if (noResults) noResults.style.display = 'none';
+    
+    if (phoneInput) {
+        phoneInput.value = '';
+        phoneInput.focus();
+    }
 }
 
-// Optimized notification system
+// Improved notification system with better cleanup
 function showNotification(message, type = 'success') {
     // Clear existing notification timeout
-    clearTimeout(notificationTimeout);
+    if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+    }
     
     // Remove existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
+    existingNotifications.forEach(notification => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    });
     
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -434,7 +686,7 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
-// Connection monitoring
+// Connection monitoring with improved handling
 window.addEventListener('online', () => {
     isOnline = true;
     showNotification('Connection restored', 'success');
@@ -447,31 +699,31 @@ window.addEventListener('offline', () => {
 
 // Cleanup function
 function cleanup() {
-    clearTimeout(phoneInputTimeout);
-    clearTimeout(notificationTimeout);
-}
-
-// Event listeners for cleanup and initialization
-window.addEventListener('beforeunload', cleanup);
-
-// Auto-focus on phone input when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('customerPhone').focus();
+    if (phoneInputTimeout) clearTimeout(phoneInputTimeout);
+    if (notificationTimeout) clearTimeout(notificationTimeout);
     
-    // Add keyboard navigation support
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const resultsSection = document.getElementById('resultsSection');
-            if (resultsSection.classList.contains('active')) {
-                goBack();
-            }
+    // Remove event listeners if needed
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        if (notification.parentNode) {
+            notification.remove();
         }
     });
+}
+
+// Event listeners for cleanup
+window.addEventListener('beforeunload', cleanup);
+window.addEventListener('unload', cleanup);
+
+// Error handling for uncaught errors
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+    showNotification('An unexpected error occurred. Please refresh the page.', 'error');
 });
 
-// Optional: Add demo numbers for testing (comment out in production)
-// document.addEventListener('DOMContentLoaded', function() {
-//     console.log('Demo phone numbers you can try:');
-//     console.log('+234 801 234 5678');
-//     console.log('+234 817 072 4872');
-// });
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('A network error occurred. Please try again.', 'error');
+    event.preventDefault(); // Prevent the default console error
+});
