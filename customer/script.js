@@ -1,6 +1,6 @@
 // Configuration - Move to environment variables in production
-const SUPABASE_URL = __SUPABASE_URL__;
-const SUPABASE_ANON_KEY =__SUPABASE_ANON_KEY__;
+const SUPABASE_URL ='__SUPABASE_URL__';
+const SUPABASE_ANON_KEY ='__SUPABASE_ANON_KEY__';
 
 // Initialize Supabase client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
