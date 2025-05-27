@@ -1,6 +1,6 @@
 // Configuration - Move to environment variables in production
-const SUPABASE_URL = 'https://mhwsjjumsiveahfckcwr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1od3NqanVtc2l2ZWFoZmNrY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMTc4MTQsImV4cCI6MjA2MzU5MzgxNH0.5varGB23DXpfi1adlwejmYwLlTbbjCPfKGDm9rWEQBo';
+const SUPABASE_URL = __SUPABASE_URL__;
+const SUPABASE_ANON_KEY =__SUPABASE_ANON_KEY__;
 
 // Initialize Supabase client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
