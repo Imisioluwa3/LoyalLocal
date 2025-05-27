@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <title>LL Interlocking Favicon</title>
+    <desc>Two interlocking L's in a modern, geometric style. Color: #2563EB with a subtle gradient.</desc>
+    <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#4A7FF0; stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#2563EB; stop-opacity:1" />
+    </linearGradient>
+    </defs>
+    <style>
+    .letter-l {
+        fill: none;
+        stroke: url(#blueGradient);
+        stroke-width: 10; /* Thickness of the letters */
+        stroke-linecap: round; /* Or 'square' or 'butt' for different end styles */
+        stroke-linejoin: round; /* For smoother corners */
+    }
+    </style>
+    <path class="letter-l" d="M 15 12 L 15 42 L 38 42" />
+    <path class="letter-l" d="M 26 22 L 26 52 L 49 52" />
+</svg>
