@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to LoyalLocal - Loyalty Rewards Made Simple</title>
+    <title>LoyalLocal - Simple Loyalty Rewards for Local Businesses</title>
+    <meta name="description" content="A phone-number-based loyalty system designed for local salons, barbershops, and eateries. No apps required - just provide your phone number!">
     <link rel="icon" type="image/svg+xml" href="./assets/favico.svg">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,112 +16,144 @@
             <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle navigation menu">☰</button>
             <ul class="nav-links" id="navLinks">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="business/index.html">Business Portal</a></li>
-                <li><a href="customer/index.html">Check Rewards</a></li>
-                <li><a href="business/index.html#registerForm" class="cta-nav">Sign Up Your Business</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#benefits">Benefits</a></li>
+                <li><a href="business/index.html" class="cta-nav">Business Portal</a></li>
+                <li><a href="customer/index.html" class="cta-nav">Customer Portal</a></li>
             </ul>
         </nav>
 
         <!-- Hero Section -->
         <header class="hero-section">
-            <h1>Retain Loyal Customers, Effortlessly.</h1>
-            <p class="subtitle">LoyalLocal is a simple, phone-number-based loyalty system designed to help local salons, barbershops, and eateries thrive by rewarding their frequent customers.</p>
-            <a href="business/index.html" class="hero-cta-button">Get Started for Free</a>
+            <h1>Retain Loyal Customers, Effortlessly</h1>
+            <p class="subtitle">The Simple Phone-Number Loyalty System</p>
+            <p class="description">
+                LoyalLocal is designed specifically for local salons, barbershops, and eateries. <br>   
+                Reward your frequent customers using just their phone number—no apps, no cards, no hassle.
+            </p>
+            <a href="#how-it-works" class="hero-cta-button">See How It Works</a>
         </header>
 
-        <!-- How It Works Section -->
-        <section id="how-it-works" class="content-section">
-            <h2>How LoyalLocal Works</h2>
-            <div class="how-it-works-grid">
-                <div class="step-card">
-                    <div class="icon">1️⃣</div>
-                    <h3>Business Setup</h3>
-                    <p>Businesses quickly register and define their simple loyalty program (e.g., "5th visit gets 50% off").</p>
-                </div>
-                <div class="step-card">
+        <!-- Features Section -->
+        <section id="features" class="content-section">
+            <h2>Why Choose LoyalLocal?</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
                     <div class="icon">📱</div>
-                    <h3>Log Visits</h3>
-                    <p>At checkout, businesses enter the customer's phone number to log a visit or purchase. No apps for customers to download!</p>
+                    <h3>Zero-App Experience</h3>
+                    <p>Customers don't need to download anything. They just provide their phone number to participate in your loyalty program.</p>
                 </div>
-                <div class="step-card">
-                    <div class="icon">🎁</div>
-                    <h3>Earn & Redeem</h3>
-                    <p>The system tracks progress. When a reward is earned, it's flagged for easy redemption on the next visit.</p>
+
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3>Quick Setup</h3>
+                    <p>Get your loyalty program running in minutes with our intuitive dashboard. Define your rewards and start tracking visits immediately.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Customer data is encrypted and secure. Clear consent management for all communications with full privacy compliance.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">📊</div>
+                    <h3>Smart Analytics</h3>
+                    <p>Track customer visits, monitor reward redemptions, and see your program's success with detailed analytics.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">💬</div>
+                    <h3>Optional SMS Notifications</h3>
+                    <p>Keep customers engaged with automated SMS notifications for new enrollments and earned rewards (with their consent).</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🎯</div>
+                    <h3>Flexible Rewards</h3>
+                    <p>Create stamp-based programs like "5th visit gets 50% off" or "Buy 9 coffees, get the 10th free" with easy customization.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section id="features" class="content-section">
-            <h2>Key Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="icon">📞</div>
-                    <h3>Phone Number Based</h3>
-                    <p>Uses familiar phone numbers as unique identifiers. No need for physical cards or complex QR codes.</p>
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="content-section">
+            <h2>How It Works</h2>
+            
+            <div class="how-it-works-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Customer Visits</h3>
+                    <p>At checkout, simply ask for the customer's phone number. The system will create a new profile or recognize returning customers instantly.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="icon">⚙️</div>
-                    <h3>Simple for Businesses</h3>
-                    <p>Easy setup and an intuitive dashboard for managing customers and tracking loyalty progress.</p>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Track Progress</h3>
+                    <p>Each visit is automatically logged. Customers can see their progress toward their next reward, and you can track their loyalty.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="icon">😃</div>
-                    <h3>Frictionless for Customers</h3>
-                    <p>Customers don't need to download an app. They just provide their phone number to participate.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">📈</div>
-                    <h3>Boost Retention</h3>
-                    <p>Encourage repeat business by rewarding customer loyalty and making them feel valued.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">💬</div>
-                    <h3>Optional SMS Alerts</h3>
-                    <p>Keep customers engaged with automated SMS notifications for new enrollments and earned rewards (with consent).</p>
-                </div>
-                 <div class="feature-card">
-                    <div class="icon">📊</div>
-                    <h3>Basic Insights</h3>
-                    <p>Track key metrics like total customers, visits, and rewards redeemed to see your program's success.</p>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Reward & Repeat</h3>
+                    <p>When customers reach their reward threshold, they're notified and can redeem instantly. The cycle resets for continued loyalty.</p>
                 </div>
             </div>
         </section>
 
         <!-- Benefits Section -->
         <section id="benefits" class="content-section">
-            <h2>Benefits for Your Business</h2>
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="icon">💖</div>
-                    <h3>Increased Customer Loyalty</h3>
-                    <p>Make customers feel appreciated and give them a reason to choose your business over competitors.</p>
+            <h2>Built for Success</h2>
+            
+            <div class="benefits-two-column">
+                <div class="benefit-category">
+                    <h3>For Your Business</h3>
+                    <ul class="benefit-list">
+                        <li>Cost-effective solution—fraction of custom app costs</li>
+                        <li>Easy implementation—setup in minutes, not weeks</li>
+                        <li>Immediate ROI—start seeing results right away</li>
+                        <li>Increased customer retention and visit frequency</li>
+                        <li>Valuable customer insights and analytics</li>
+                        <li>Professional loyalty program without complexity</li>
+                    </ul>
                 </div>
-                <div class="benefit-card">
-                    <div class="icon">💰</div>
-                    <h3>Drive Repeat Business</h3>
-                    <p>Loyalty programs are proven to increase visit frequency and customer lifetime value.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">📢</div>
-                    <h3>Positive Word-of-Mouth</h3>
-                    <p>Happy, rewarded customers are more likely to recommend your business to friends and family.</p>
+
+                <div class="benefit-category">
+                    <h3>For Your Customers</h3>
+                    <ul class="benefit-list">
+                        <li>No apps to download or cards to carry</li>
+                        <li>Works with any phone—smartphone not required</li>
+                        <li>Privacy-focused with minimal data collection</li>
+                        <li>Transparent reward progress tracking</li>
+                        <li>Instant enrollment and immediate benefits</li>
+                        <li>Feel valued and appreciated for their loyalty</li>
+                    </ul>
                 </div>
             </div>
         </section>
         
         <!-- Call to Action Section -->
         <section class="hero-section" style="background: rgba(0,0,0,0.15); margin-top:50px;">
-             <h2>Ready to Grow Your Loyal Customer Base?</h2>
-             <p class="subtitle">Join LoyalLocal today and start building stronger relationships with your customers. It's simple, effective, and designed for businesses like yours.</p>
-             <a href="business/index.html#registerForm" class="hero-cta-button" style="background: #667eea; color: white;">Register Your Business Now</a>
+             <h2>Ready to Build Customer Loyalty?</h2>
+             <p class="subtitle">Join LoyalLocal today and start building stronger relationships with your customers.</p>
+             <a href="https://github.com/Imisioluwa3/LoyalLocal" class="hero-cta-button">Get Started Free</a>
         </section>
 
     </div>
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© <span id="currentYear"></span> LoyalLocal. All rights reserved. A simple solution for local businesses.</p>
+        <div class="footer-links">
+            <a href="https://github.com/Imisioluwa3/LoyalLocal">GitHub</a>
+            <a href="https://github.com/Imisioluwa3/LoyalLocal/issues">Support</a>
+            <a href="business/index.html">Business Portal</a>
+            <a href="customer/index.html">Customer Portal</a>
+            <a href="https://github.com/Imisioluwa3/LoyalLocal/blob/main/LICENSE">License</a>
+        </div>
+        
+        <p>&copy; <span id="currentYear"></span> LoyalLocal. Built with ❤️ for local businesses everywhere.</p>
         <p>Built with <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank" rel="noopener">HTML</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" rel="noopener">CSS</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener">JavaScript</a>.</p>
     </footer>
     
