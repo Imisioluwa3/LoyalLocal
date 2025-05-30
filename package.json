@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "A modern, ultra-simple loyalty rewards system designed specifically for local salons, barbershops, and eateries. LoyalLocal eliminates the hassle of traditional punch cards and expensive custom app development by leveraging phone numbers as the primary customer identifier.",
+  "main": "script.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Imisioluwa3/LoyalLocal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Imisioluwa3/LoyalLocal/issues"
+  },
+  "homepage": "https://github.com/Imisioluwa3/LoyalLocal#readme",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.0.0-beta.3"
+  }
+}

@@ -83,93 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Enhanced Nigerian Phone Number Utility Functions
-function normalizePhoneNumber(phone) {
-    // Remove all non-digit characters
-    const digits = phone.replace(/\D/g, '');
-    
-    // Handle Nigerian phone numbers
-    if (digits.length === 11 && digits.startsWith('0')) {
-        // Convert 08012345678 to +2348012345678
-        return `+234${digits.substring(1)}`;
-    } else if (digits.length === 10 && !digits.startsWith('0')) {
-        // Convert 8012345678 to +2348012345678
-        return `+234${digits}`;
-    } else if (digits.length === 13 && digits.startsWith('234')) {
-        // Convert 2348012345678 to +2348012345678
-        return `+${digits}`;
-    } else if (digits.length === 14 && digits.startsWith('+234')) {
-        // Already in +234 format
-        return digits;
-    }
-    
-    // Return original if it doesn't match expected patterns
-    return phone;
-}
-
-function formatPhoneNumber(phone) {
-    const digits = phone.replace(/\D/g, '');
-    
-    if (digits.length === 13 && digits.startsWith('234')) {
-        // Format +234 801 234 5678
-        return `+234 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
-    } else if (digits.length === 11 && digits.startsWith('0')) {
-        // Format 0801 234 5678
-        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-    } else if (digits.length === 10) {
-        // Format 801 234 5678
-        return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-    }
-    
-    return phone;
-}
-
-function validatePhoneNumber(phone) {
-    const digits = phone.replace(/\D/g, '');
-    
-    // Valid Nigerian phone number patterns:
-    // 11 digits starting with 0 (08012345678)
-    // 10 digits not starting with 0 (8012345678)
-    // 13 digits starting with 234 (2348012345678)
-    // With + prefix for international format
-    
-    if (digits.length === 11 && digits.startsWith('0')) {
-        // Check if it's a valid Nigerian network prefix
-        const prefix = digits.substring(1, 4);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 10 && !digits.startsWith('0')) {
-        const prefix = digits.substring(0, 3);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 13 && digits.startsWith('234')) {
-        const prefix = digits.substring(3, 6);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 14 && phone.startsWith('+234')) {
-        const prefix = digits.substring(3, 6);
-        return isValidNigerianPrefix(prefix);
-    }
-    
-    return false;
-}
-
-function isValidNigerianPrefix(prefix) {
-    // Updated comprehensive Nigerian network prefixes
-    const nigerianPrefixes = [
-        // MTN
-        '703', '706', '803', '806', '813', '814', '816', '903', '906',
-        // Airtel
-        '701', '708', '802', '808', '812', '901', '902', '904', '907', '912',
-        // Glo
-        '705', '805', '807', '811', '815', '905', '915',
-        // 9mobile (Etisalat)
-        '809', '817', '818', '908', '909',
-        // Ntel
-        '804',
-        // Smile
-        '702'
-    ];
-    
-    return nigerianPrefixes.includes(prefix);
-}
+// Phone utility functions are now expected to be in window.phoneUtils
 
 function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -586,7 +500,7 @@ async function lookupCustomer() {
         return;
     }
 
-    if (!validatePhoneNumber(phone)) {
+    if (!window.phoneUtils.validatePhoneNumber(phone)) {
         document.querySelector('.phone-error').textContent = 'Please enter a valid Nigerian phone number (e.g., 08012345678)';
         document.querySelector('.phone-error').style.display = 'block';
         return;
@@ -602,7 +516,7 @@ async function lookupCustomer() {
             .eq('user_id', user.id)
             .single();
 
-        const normalizedPhone = normalizePhoneNumber(phone);
+        const normalizedPhone = window.phoneUtils.normalizePhoneNumber(phone);
         const { data: visits, error } = await supabase
             .from('visits')
             .select('*')
@@ -631,7 +545,7 @@ function displayCustomer(visits, business, phone) {
     const customerName = visits[0]?.customer_name || 'Customer';
     
     document.getElementById('customerName').textContent = customerName;
-    document.getElementById('customerPhoneDisplay').textContent = `Phone: ${formatPhoneNumber(phone)}`;
+    document.getElementById('customerPhoneDisplay').textContent = `Phone: ${window.phoneUtils.formatPhoneNumber(phone)}`;
     document.getElementById('visitCount').textContent = `Visits: ${visitCount}`;
     document.getElementById('progressText').textContent = 
         `${visitCount} of ${requiredVisits} visits towards reward`;
@@ -661,7 +575,7 @@ async function addNewCustomer() {
     const phone = document.getElementById('customerPhone').value.trim();
     const name = document.getElementById('newCustomerName').value.trim() || 'Customer';
     
-    if (!phone || !validatePhoneNumber(phone)) {
+    if (!phone || !window.phoneUtils.validatePhoneNumber(phone)) {
         showNotification('Invalid phone number', 'error');
         return;
     }
@@ -674,7 +588,7 @@ async function addNewCustomer() {
             .eq('user_id', user.id)
             .single();
 
-        const normalizedPhone = normalizePhoneNumber(phone);
+        const normalizedPhone = window.phoneUtils.normalizePhoneNumber(phone);
         
         // Add first visit
         const { error } = await supabase
@@ -705,7 +619,7 @@ async function addNewCustomer() {
 async function logVisit() {
     const phone = document.getElementById('customerPhone').value.trim();
     
-    if (!phone || !validatePhoneNumber(phone)) {
+    if (!phone || !window.phoneUtils.validatePhoneNumber(phone)) {
         showNotification('Invalid phone number', 'error');
         return;
     }
@@ -718,7 +632,7 @@ async function logVisit() {
             .eq('user_id', user.id)
             .single();
 
-        const normalizedPhone = normalizePhoneNumber(phone);
+        const normalizedPhone = window.phoneUtils.normalizePhoneNumber(phone);
         
         // Get customer name from existing visits
         const { data: existingVisits } = await supabase
@@ -759,7 +673,7 @@ async function logVisit() {
 async function redeemReward() {
     const phone = document.getElementById('customerPhone').value.trim();
     
-    if (!phone || !validatePhoneNumber(phone)) {
+    if (!phone || !window.phoneUtils.validatePhoneNumber(phone)) {
         showNotification('Invalid phone number', 'error');
         return;
     }
@@ -772,7 +686,7 @@ async function redeemReward() {
             .eq('user_id', user.id)
             .single();
 
-        const normalizedPhone = normalizePhoneNumber(phone);
+        const normalizedPhone = window.phoneUtils.normalizePhoneNumber(phone);
         
         // Get unredeemed visits
         const { data: visits, error: visitsError } = await supabase
