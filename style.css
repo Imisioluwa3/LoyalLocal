@@ -21,7 +21,7 @@
         /* Mobile-first navigation */
         .navbar {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             padding: 12px 20px;
             border-radius: 12px;
             margin-bottom: 20px;
@@ -30,13 +30,19 @@
             justify-content: space-between;
             align-items: center;
             animation: fadeInDown 0.8s ease-out;
-            position: relative;
+            position: fixed;
+            width: calc(100% - 20px);
+            max-width: 1200px;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+            z-index:10000;
         }
 
         .navbar .logo {
             font-size: clamp(1.2rem, 4vw, 1.8rem);
             font-weight: 700;
-            color: white;
+            color: #ff6b6b;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -52,8 +58,8 @@
         .menu-toggle {
             display: none;
             background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
             font-size: 1.2rem;
             cursor: pointer;
             padding: 8px 12px;
@@ -81,7 +87,8 @@
 
         .nav-links a {
             text-decoration: none;
-            color: white;
+            color: #fff; /* Instead of #ff6b6b */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             font-weight: 500;
             padding: 8px 12px;
             border-radius: 8px;
@@ -91,13 +98,14 @@
         }
 
         .nav-links a:hover, .nav-links a.active {
-            background: rgba(255, 255, 255, 0.2);
+            background: #ff6b6b75;
             color: #fff;
+            font-weight: 700;
         }
 
         .nav-links a.cta-nav {
-            background: white;
-            color: #667eea;
+            background: #ff6b6b;
+            color: white;
             font-weight: 600;
         }
 
@@ -114,6 +122,7 @@
             background: rgba(0,0,0,0.1);
             margin-bottom: clamp(30px, 6vw, 50px);
             animation: fadeInUp 1s 0.2s ease-out backwards;
+            margin-top: 100px;
         }
 
         .hero-section h1 {
@@ -289,7 +298,7 @@
             margin-top: 20px;
             animation: fadeInUp 1s 0.6s ease-out backwards;
         }
-        
+
         .footer a {
             color: white;
             text-decoration: underline;
@@ -326,10 +335,14 @@
 
         /* Tablet Styles */
         @media (max-width: 1024px) {
+            html {
+                scroll-padding-top: 75px; /* Adjusted for tablet navbar */
+            }
+
             .container {
                 padding: 15px;
             }
-            
+
             .features-grid, .how-it-works-grid, .benefits-grid {
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             }
@@ -341,6 +354,10 @@
 
         /* Mobile Styles */
         @media (max-width: 768px) {
+            html {
+                scroll-padding-top: 70px; /* Adjusted for mobile navbar */
+            }
+
             .container {
                 padding: 10px;
             }
@@ -351,9 +368,10 @@
             }
 
             .navbar {
-                position: relative;
+                position: fixed;
                 flex-wrap: nowrap;
                 padding: 15px 20px;
+                z-index: 1000;
             }
 
             .nav-links {
@@ -372,8 +390,8 @@
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.3s ease;
-                z-index: 1000;
                 border: 1px solid rgba(255, 255, 255, 0.3);
+                margin: 20px;
             }
 
             .nav-links.active {
@@ -426,6 +444,7 @@
 
             .hero-section {
                 border-radius: 15px;
+                margin-top: 50px;
             }
 
             .content-section {
@@ -440,6 +459,10 @@
 
         /* Small Mobile Styles */
         @media (max-width: 480px) {
+            html {
+                scroll-padding-top: 65px; /* Adjusted for small mobile navbar */
+            }
+
             .container {
                 padding: 8px;
             }
@@ -447,6 +470,7 @@
             .navbar {
                 padding: 12px 15px;
                 border-radius: 10px;
+                z-index: 1000;
             }
 
             .hero-section, .content-section {
@@ -515,4 +539,5 @@
         /* Smooth scrolling */
         html {
             scroll-behavior: smooth;
+            scroll-padding-top: 80px; /* Offset for fixed navbar */
         }
