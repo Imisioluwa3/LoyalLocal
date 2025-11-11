@@ -15,49 +15,16 @@ let phoneInputTimeout;
 let notificationTimeout;
 let isOnline = navigator.onLine;
 
-// Phone number validation and formatting
+// Phone number validation and formatting using PhoneUtils
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('customerPhone');
-    
+
     phoneInput.addEventListener('input', function(e) {
         clearTimeout(phoneInputTimeout);
-        
+
         phoneInputTimeout = setTimeout(() => {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            // Auto-add country code if user starts with local number
-            if (value.length > 0 && !value.startsWith('234')) {
-                // If starts with 0, replace with 234
-                if (value.startsWith('0')) {
-                    value = '234' + value.substring(1);
-                }
-                // If starts with 7,8,9 (common Nigerian prefixes), add 234
-                else if (/^[789]/.test(value)) {
-                    value = '234' + value;
-                }
-            }
-            
-            // Format as +234 817 072 4872
-            let formatted = '';
-            if (value.length > 0) {
-                formatted = '+' + value.substring(0, 3);
-                if (value.length > 3) {
-                    formatted += ' ' + value.substring(3, 6);
-                }
-                if (value.length > 6) {
-                    formatted += ' ' + value.substring(6, 9);
-                }
-                if (value.length > 9) {
-                    formatted += ' ' + value.substring(9, 13);
-                }
-            }
-            
-            // Limit to valid Nigerian phone number length
-            if (value.length > 13) {
-                formatted = formatted.substring(0, 17); // +234 817 072 4872
-            }
-            
-            e.target.value = formatted;
+            // Use the PhoneUtils autoFormatPhoneInput function
+            e.target.value = PhoneUtils.autoFormatPhoneInput(e.target.value);
         }, 100); // Debounce for 100ms
     });
 
@@ -83,32 +50,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Phone number validation function
+// Phone number validation function - now uses PhoneUtils
 function validatePhoneNumber(phoneInput) {
-    const phoneNumber = phoneInput.replace(/\D/g, '');
-    
-    // Check if it's a valid Nigerian number
-    if (phoneNumber.length < 13 || phoneNumber.length > 14) {
-        return { isValid: false, message: 'Phone number must be 10-11 digits after country code' };
-    }
-    
-    if (!phoneNumber.startsWith('234')) {
-        return { isValid: false, message: 'Please enter a valid Nigerian phone number (+234...)' };
-    }
-    
-    // Check valid Nigerian prefixes after 234
-    const prefix = phoneNumber.substring(3, 6);
-    const validPrefixes = ['701', '702', '703', '704', '705', '706', '707', '708', '709', 
-                          '802', '803', '804', '805', '806', '807', '808', '809', '810', 
-                          '811', '812', '813', '814', '815', '816', '817', '818', '819',
-                          '901', '902', '903', '904', '905', '906', '907', '908', '909',
-                          '915', '916', '917', '918'];
-    
-    if (!validPrefixes.includes(prefix)) {
-        return { isValid: false, message: 'Invalid Nigerian phone number prefix' };
-    }
-    
-    return { isValid: true, phoneNumber };
+    return PhoneUtils.validatePhoneNumber(phoneInput);
 }
 
 // Main lookup function with improved error handling
@@ -269,41 +213,9 @@ async function lookupRewards() {
     }
 }
 
-// Generate different phone number format variations for flexible matching
+// Generate different phone number format variations for flexible matching - now uses PhoneUtils
 function generatePhoneVariations(phoneNumber) {
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
-    const variations = new Set();
-    
-    // Original format
-    variations.add(cleanNumber);
-    
-    // With + prefix
-    variations.add('+' + cleanNumber);
-    
-    // Formatted versions
-    if (cleanNumber.startsWith('234')) {
-        const localNumber = cleanNumber.substring(3);
-        
-        // +234 817 072 4872
-        variations.add(`+234 ${localNumber.substring(0,3)} ${localNumber.substring(3,6)} ${localNumber.substring(6)}`);
-        
-        // +234-817-072-4872
-        variations.add(`+234-${localNumber.substring(0,3)}-${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
-        
-        // +234.817.072.4872
-        variations.add(`+234.${localNumber.substring(0,3)}.${localNumber.substring(3,6)}.${localNumber.substring(6)}`);
-        
-        // (234) 817-072-4872
-        variations.add(`(234) ${localNumber.substring(0,3)}-${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
-        
-        // 0817072472 (local format)
-        variations.add('0' + localNumber);
-        
-        // +234(817)072-4872
-        variations.add(`+234(${localNumber.substring(0,3)})${localNumber.substring(3,6)}-${localNumber.substring(6)}`);
-    }
-    
-    return Array.from(variations);
+    return PhoneUtils.generatePhoneVariations(phoneNumber);
 }
 
 

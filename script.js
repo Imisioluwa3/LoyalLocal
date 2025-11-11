@@ -83,10 +83,60 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-//Highlight current page in navigation
-const currentPath = window.location.pathname;
-navLinks.forEach(link => {
-    if (link.getAttribute('href') === currentPath) {
-        link.classList.add('active-link');
-    }
+// Scroll-spy: Highlight current section in navigation
+function updateActiveNavLink() {
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    let currentSection = '';
+    const scrollPosition = window.scrollY + 150; // Offset for better UX
+
+    // Find which section is currently in view
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+            currentSection = section.getAttribute('id');
+        }
+    });
+
+    // Update active class on nav links
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        const href = link.getAttribute('href');
+
+        // Handle hash links
+        if (href && href.startsWith('#')) {
+            if (href === `#${currentSection}`) {
+                link.classList.add('active');
+            }
+        }
+        // Handle page links (index.html, business/index.html, etc.)
+        else if (href === window.location.pathname ||
+                 (href === 'index.html' && window.location.pathname.endsWith('/'))) {
+            // Only activate "Home" if we're at the top or no section is active
+            if (!currentSection || scrollPosition < 300) {
+                link.classList.add('active');
+            }
+        }
+    });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateActiveNavLink();
+});
+
+// Update on scroll
+let scrollTimeout;
+window.addEventListener('scroll', function() {
+    // Debounce for performance
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateActiveNavLink, 50);
+});
+
+// Update on hash change
+window.addEventListener('hashchange', function() {
+    updateActiveNavLink();
 });

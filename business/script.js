@@ -83,97 +83,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Enhanced Nigerian Phone Number Utility Functions
+// Enhanced Nigerian Phone Number Utility Functions - now using PhoneUtils
 function normalizePhoneNumber(phone) {
-    // Remove all non-digit characters
-    const digits = phone.replace(/\D/g, '');
-    
-    // Handle Nigerian phone numbers
-    if (digits.length === 11 && digits.startsWith('0')) {
-        // Convert 08012345678 to +2348012345678
-        return `+234${digits.substring(1)}`;
-    } else if (digits.length === 10 && !digits.startsWith('0')) {
-        // Convert 8012345678 to +2348012345678
-        return `+234${digits}`;
-    } else if (digits.length === 13 && digits.startsWith('234')) {
-        // Convert 2348012345678 to +2348012345678
-        return `+${digits}`;
-    } else if (digits.length === 14 && digits.startsWith('+234')) {
-        // Already in +234 format
-        return digits;
-    }
-    
-    // Return original if it doesn't match expected patterns
-    return phone;
+    return PhoneUtils.normalizePhoneNumber(phone);
 }
 
-function formatPhoneNumber(phone) {
-    const digits = phone.replace(/\D/g, '');
-    
-    if (digits.length === 13 && digits.startsWith('234')) {
-        // Format +234 801 234 5678
-        return `+234 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
-    } else if (digits.length === 11 && digits.startsWith('0')) {
-        // Format 0801 234 5678
-        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-    } else if (digits.length === 10) {
-        // Format 801 234 5678
-        return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-    }
-    
-    return phone;
+function formatPhoneNumber(phone, format) {
+    return PhoneUtils.formatPhoneNumber(phone, format);
 }
 
 function validatePhoneNumber(phone) {
-    const digits = phone.replace(/\D/g, '');
-    
-    // Valid Nigerian phone number patterns:
-    // 11 digits starting with 0 (08012345678)
-    // 10 digits not starting with 0 (8012345678)
-    // 13 digits starting with 234 (2348012345678)
-    // With + prefix for international format
-    
-    if (digits.length === 11 && digits.startsWith('0')) {
-        // Check if it's a valid Nigerian network prefix
-        const prefix = digits.substring(1, 4);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 10 && !digits.startsWith('0')) {
-        const prefix = digits.substring(0, 3);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 13 && digits.startsWith('234')) {
-        const prefix = digits.substring(3, 6);
-        return isValidNigerianPrefix(prefix);
-    } else if (digits.length === 14 && phone.startsWith('+234')) {
-        const prefix = digits.substring(3, 6);
-        return isValidNigerianPrefix(prefix);
-    }
-    
-    return false;
+    const result = PhoneUtils.validatePhoneNumber(phone);
+    return result.isValid;
 }
 
 function isValidNigerianPrefix(prefix) {
-    // Updated comprehensive Nigerian network prefixes
-    const nigerianPrefixes = [
-        // MTN
-        '703', '706', '803', '806', '813', '814', '816', '903', '906',
-        // Airtel
-        '701', '708', '802', '808', '812', '901', '902', '904', '907', '912',
-        // Glo
-        '705', '805', '807', '811', '815', '905', '915',
-        // 9mobile (Etisalat)
-        '809', '817', '818', '908', '909',
-        // Ntel
-        '804',
-        // Smile
-        '702'
-    ];
-    
-    return nigerianPrefixes.includes(prefix);
+    return PhoneUtils.isValidNigerianPrefix(prefix);
 }
 
 function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return PhoneUtils.validateEmail(email);
 }
 
 function showLoading(elementId, show = true) {
