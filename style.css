@@ -4,9 +4,15 @@
     box-sizing: border-box;
 }
 
+:root {
+    --color-primary: #667eea;
+    --color-accent: #ff6b6b;
+    --border-radius: 8px;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
@@ -42,7 +48,7 @@ body {
 .navbar .logo {
     font-size: clamp(1.2rem, 4vw, 1.8rem);
     font-weight: 700;
-    color: #ff6b6b;
+    color: var(--color-accent);
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -59,11 +65,11 @@ body {
     display: none;
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 107, 107, 0.3);
-    color: #ff6b6b;
+    color: var(--color-accent);
     font-size: 1.2rem;
     cursor: pointer;
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     transition: all 0.3s ease;
     font-weight: bold;
 }
@@ -91,7 +97,7 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     font-weight: 500;
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     transition: background 0.3s ease, color 0.3s ease;
     font-size: clamp(0.85rem, 2vw, 1rem);
     white-space: nowrap;
@@ -104,7 +110,7 @@ body {
 }
 
 .nav-links a.cta-nav {
-    background: #ff6b6b;
+    background: var(--color-accent);
     color: white;
     font-weight: 600;
 }
@@ -154,7 +160,7 @@ body {
 .hero-cta-button {
     display: inline-block;
     padding: clamp(12px, 3vw, 15px) clamp(25px, 6vw, 35px);
-    background: #ff6b6b;
+    background: var(--color-accent);
     color: white;
     font-size: clamp(1rem, 2.5vw, 1.1rem);
     font-weight: 600;
@@ -193,7 +199,7 @@ body {
     display: block;
     width: 60px;
     height: 4px;
-    background: #667eea;
+    background: var(--color-primary);
     margin: 10px auto 0;
     border-radius: 2px;
 }
@@ -229,7 +235,7 @@ body {
     display: inline-block;
     width: 60px;
     height: 60px;
-    background: #667eea;
+    background: var(--color-primary);
     color: white;
     border-radius: 50%;
     line-height: 60px;
@@ -261,7 +267,7 @@ body {
 .benefit-category {
     padding: clamp(20px, 4vw, 30px);
     border-radius: 15px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--color-primary), #764ba2);
     color: white;
 }
 
@@ -319,7 +325,17 @@ body {
 }
 
 .footer-links a:hover {
-    color: #667eea;
+    color: var(--color-primary);
+}
+
+
+.btn.loading::after {
+    content: '';
+    animation: spin 0.6s linear infinite;
+}
+
+.hero-section, .content-section {
+    will-change: transform, opacity;
 }
 
 /* Animations */
@@ -412,17 +428,17 @@ body {
         width: 100%;
         color: #333 !important;
         font-weight: 600;
-        border-radius: 8px;
+        border-radius: var(--border-radius);
         margin-bottom: 5px;
     }
 
     .nav-links a:hover, .nav-links a.active {
         background: rgba(102, 126, 234, 0.1);
-        color: #667eea !important;
+        color: var(--color-primary) !important;
     }
 
     .nav-links a.cta-nav {
-        background: #667eea !important;
+        background: var(--color-primary) !important;
         color: white !important;
         margin-top: 10px;
     }

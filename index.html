@@ -7,11 +7,12 @@
     <meta name="description" content="A phone-number-based loyalty system designed for local salons, barbershops, and eateries. No apps required - just provide your phone number!">
     <link rel="icon" type="image/svg+xml" href="./assets/favico.svg">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="httsps://fonts.googleapis.com">
 </head>
 <body>
     <div class="container">
         <!-- Navigation Bar -->
-        <nav class="navbar">
+        <nav class="navbar" aria-label="Main navigation">
             <a href="index.html" class="logo"><span class="logo-symbol">💈</span>LoyalLocal</a>
             <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle navigation menu">☰</button>
             <ul class="nav-links" id="navLinks">
@@ -36,8 +37,8 @@
         </header>
 
         <!-- Features Section -->
-        <section id="features" class="content-section">
-            <h2>Why Choose LoyalLocal?</h2>
+        <section id="features" class="content-section" aria-labelledby="features-heading">
+            <h2 id="features-heading">Why Choose LoyalLocal?</h2>
             
             <div class="features-grid">
                 <div class="feature-card">
@@ -79,8 +80,8 @@
         </section>
 
         <!-- How It Works Section -->
-        <section id="how-it-works" class="content-section">
-            <h2>How It Works</h2>
+        <section id="how-it-works" class="content-section" aria-labelledby="how-it-works-heading">
+            <h2 id="how-it-works-heading">How It Works</h2>
             
             <div class="how-it-works-grid">
                 <div class="step-card">
@@ -104,8 +105,8 @@
         </section>
 
         <!-- Benefits Section -->
-        <section id="benefits" class="content-section">
-            <h2>Built for Success</h2>
+        <section id="benefits" class="content-section" aria-labelledby="benefits-heading">
+            <h2 id="benefits-heading">Built for Success</h2>
             
             <div class="benefits-two-column">
                 <div class="benefit-category">
