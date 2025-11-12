@@ -54,12 +54,18 @@ async function loadCustomerList() {
             if (!customerMap[visit.customer_phone_number]) {
                 customerMap[visit.customer_phone_number] = {
                     phone: visit.customer_phone_number,
+                    name: visit.customer_name || null,  // Get name from visits table
                     visits: [],
                     totalVisits: 0,
                     redeemed: 0,
                     firstVisit: visit.created_at,
                     lastVisit: visit.created_at
                 };
+            }
+
+            // Update name if this visit has a name and current doesn't
+            if (visit.customer_name && !customerMap[visit.customer_phone_number].name) {
+                customerMap[visit.customer_phone_number].name = visit.customer_name;
             }
 
             customerMap[visit.customer_phone_number].visits.push(visit);
@@ -92,7 +98,11 @@ async function loadCustomerList() {
             profiles.forEach(profile => {
                 if (customerMap[profile.phone_number]) {
                     customerMap[profile.phone_number].profile = profile;
-                    customerMap[profile.phone_number].name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+                    // Only override name if profile has first_name or last_name
+                    const profileName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+                    if (profileName) {
+                        customerMap[profile.phone_number].name = profileName;
+                    }
                 }
             });
         }
