@@ -6,7 +6,11 @@
     <title>LoyalLocal - Phone-Based Loyalty Rewards</title>
     <link rel="icon" type="image/svg+xml" href="../assets/favico.svg">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="analytics.css">
+    <link rel="stylesheet" href="customers.css">
+    <link rel="stylesheet" href="customer-profile.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="../utils/phone.js"></script>
 </head>
 <body>
@@ -92,6 +96,7 @@
         <div id="dashboardSection" class="dashboard">
             <div class="navigation">
                 <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+                <button class="nav-btn" onclick="showSection('analytics')">Analytics</button>
                 <button class="nav-btn" onclick="showSection('customers')">Customers</button>
                 <button class="nav-btn" onclick="showSection('settings')">Settings</button>
             </div>
@@ -129,56 +134,367 @@
                 </div>
             </div>
 
+            <!-- Analytics Section -->
+            <div id="analyticsSection" style="display: none;">
+                <div class="analytics-header">
+                    <h3>📊 Advanced Analytics & Insights</h3>
+                    <div class="date-range-selector">
+                        <label for="analyticsDateRange">Time Period:</label>
+                        <select id="analyticsDateRange" onchange="loadAnalytics()">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="365">Last Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="analyticsLoading" class="loading-state" style="display: none;">
+                    <div class="loader"></div>
+                    <p>Loading analytics data...</p>
+                </div>
+
+                <!-- Key Metrics Cards -->
+                <div class="analytics-metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">📈</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalVisitsMetric">0</div>
+                            <div class="metric-label">Total Visits</div>
+                            <div class="metric-change" id="totalVisitsChange"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">👥</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="uniqueCustomersMetric">0</div>
+                            <div class="metric-label">Unique Customers</div>
+                            <div class="metric-change" id="uniqueCustomersChange"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🔄</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="returningCustomersMetric">0%</div>
+                            <div class="metric-label">Returning Customers</div>
+                            <div class="metric-change" id="returningCustomersChange"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🎁</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="redemptionRateMetric">0%</div>
+                            <div class="metric-label">Redemption Rate</div>
+                            <div class="metric-change" id="redemptionRateChange"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">💰</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="avgVisitsPerCustomer">0</div>
+                            <div class="metric-label">Avg Visits/Customer</div>
+                            <div class="metric-change" id="avgVisitsChange"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="peakDayMetric">—</div>
+                            <div class="metric-label">Busiest Day</div>
+                            <div class="metric-change" id="peakDayTime"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Visits Trend Chart -->
+                    <div class="chart-card large">
+                        <div class="chart-header">
+                            <h4>Visits Over Time</h4>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" onclick="updateVisitsChart('daily')">Daily</button>
+                                <button class="chart-btn" onclick="updateVisitsChart('weekly')">Weekly</button>
+                                <button class="chart-btn" onclick="updateVisitsChart('monthly')">Monthly</button>
+                            </div>
+                        </div>
+                        <canvas id="visitsTrendChart"></canvas>
+                    </div>
+
+                    <!-- Customer Retention Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Customer Retention</h4>
+                        </div>
+                        <canvas id="customerRetentionChart"></canvas>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #10b981;"></span>
+                                <span>New Customers</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #3b82f6;"></span>
+                                <span>Returning Customers</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Peak Hours Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Peak Hours Analysis</h4>
+                        </div>
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+
+                    <!-- Customer Distribution Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Customer Segments</h4>
+                        </div>
+                        <canvas id="customerSegmentChart"></canvas>
+                        <div class="segment-stats">
+                            <div class="segment-stat">
+                                <span>VIP (10+ visits):</span>
+                                <strong id="vipCount">0</strong>
+                            </div>
+                            <div class="segment-stat">
+                                <span>Regular (3-9 visits):</span>
+                                <strong id="regularCount">0</strong>
+                            </div>
+                            <div class="segment-stat">
+                                <span>One-time:</span>
+                                <strong id="onetimeCount">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day of Week Analysis -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Visits by Day of Week</h4>
+                        </div>
+                        <canvas id="dayOfWeekChart"></canvas>
+                    </div>
+
+                    <!-- Redemption Analysis -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Reward Redemption Trend</h4>
+                        </div>
+                        <canvas id="redemptionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Revenue Impact Estimator -->
+                <div class="revenue-estimator">
+                    <h4>💰 Revenue Impact Estimate</h4>
+                    <div class="revenue-config">
+                        <div class="form-group">
+                            <label for="avgTransactionValue">Average Transaction Value (₦)</label>
+                            <input type="number" id="avgTransactionValue" placeholder="e.g., 5000" min="0" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="rewardCost">Average Reward Cost (₦)</label>
+                            <input type="number" id="rewardCost" placeholder="e.g., 2500" min="0" step="100">
+                        </div>
+                        <button class="btn" onclick="calculateRevenueImpact()">Calculate Impact</button>
+                    </div>
+                    <div id="revenueResults" class="revenue-results" style="display: none;">
+                        <div class="revenue-stat">
+                            <span>Total Revenue Generated:</span>
+                            <strong id="totalRevenue">₦0</strong>
+                        </div>
+                        <div class="revenue-stat">
+                            <span>Loyalty Program Cost:</span>
+                            <strong id="programCost">₦0</strong>
+                        </div>
+                        <div class="revenue-stat highlight">
+                            <span>Net Benefit:</span>
+                            <strong id="netBenefit">₦0</strong>
+                        </div>
+                        <div class="revenue-stat">
+                            <span>ROI:</span>
+                            <strong id="roiPercentage">0%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparative Metrics -->
+                <div class="comparative-metrics">
+                    <h4>📊 Comparative Analysis</h4>
+                    <div class="comparison-grid">
+                        <div class="comparison-card">
+                            <div class="comparison-period">Week over Week</div>
+                            <div class="comparison-value" id="wowVisits">—</div>
+                            <div class="comparison-label">Visit Change</div>
+                        </div>
+                        <div class="comparison-card">
+                            <div class="comparison-period">Month over Month</div>
+                            <div class="comparison-value" id="momVisits">—</div>
+                            <div class="comparison-label">Visit Change</div>
+                        </div>
+                        <div class="comparison-card">
+                            <div class="comparison-period">Year to Date</div>
+                            <div class="comparison-value" id="ytdVisits">0</div>
+                            <div class="comparison-label">Total Visits</div>
+                        </div>
+                        <div class="comparison-card">
+                            <div class="comparison-period">YTD Average</div>
+                            <div class="comparison-value" id="ytdAvg">0</div>
+                            <div class="comparison-label">Visits/Day</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Tracking -->
+                <div class="goals-section">
+                    <div class="goals-header">
+                        <h4>🎯 Monthly Goals</h4>
+                        <button class="btn-small" onclick="showGoalModal()">Set New Goal</button>
+                    </div>
+                    <div id="goalsList" class="goals-list">
+                        <!-- Goals will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Customer Management Section -->
             <div id="customersSection" style="display: none;">
-                <div class="main-actions">
-                    <div class="action-section">
-                        <h3>🔍 Look Up Customer</h3>
-                        <div class="phone-input">
-                            <input type="tel" id="customerPhone" placeholder="Enter phone number (e.g., 555-123-4567)" pattern="[0-9\-\(\)\+\s]+">
-                            <button onclick="lookupCustomer()">Look Up</button>
-                        </div>
-                        <div class="phone-error" style="display: none; color: #dc3545; font-size: 0.9rem; margin-top: 5px;">
-                            Please enter a valid phone number
-                        </div>
-                    </div>
+                <!-- Customer View Tabs -->
+                <div class="customer-tabs">
+                    <button class="customer-tab active" onclick="switchCustomerView('quick')">Quick Lookup</button>
+                    <button class="customer-tab" onclick="switchCustomerView('list')">All Customers</button>
+                </div>
 
-                    <div id="customerDisplay" style="display: none;">
-                        <div class="customer-info">
-                            <h4 id="customerName">Customer</h4>
-                            <p id="customerPhoneDisplay">Phone: </p>
-                            <p id="visitCount">Visits: 0</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                <!-- Quick Lookup View -->
+                <div id="quickLookupView" class="customer-view">
+                    <div class="main-actions">
+                        <div class="action-section">
+                            <h3>🔍 Look Up Customer</h3>
+                            <div class="phone-input">
+                                <input type="tel" id="customerPhone" placeholder="Enter phone number (e.g., 555-123-4567)" pattern="[0-9\-\(\)\+\s]+">
+                                <button onclick="lookupCustomer()">Look Up</button>
                             </div>
-                            <p id="progressText">0 visits towards reward</p>
-                        </div>
-
-                        <div id="rewardSection" class="reward-available" style="display: none;">
-                            <h4>🎉 Reward Available!</h4>
-                            <p id="rewardDescription">Customer has earned a reward!</p>
-                            <button class="redeem-btn" onclick="redeemReward()">Redeem Reward</button>
-                        </div>
-
-                        <div class="phone-input">
-                            <button onclick="logVisit()" class="log-visit-btn">Log Visit</button>
-                        </div>
-                    </div>
-
-                    <div id="newCustomerForm" style="display: none;">
-                        <div class="customer-info">
-                            <h4>New Customer</h4>
-                            <div class="form-group">
-                                <label for="newCustomerName">Customer Name (Optional)</label>
-                                <input type="text" id="newCustomerName" placeholder="Enter customer name">
+                            <div class="phone-error" style="display: none; color: #dc3545; font-size: 0.9rem; margin-top: 5px;">
+                                Please enter a valid phone number
                             </div>
-                            <button class="btn" onclick="addNewCustomer()">Add Customer & Log First Visit</button>
+                        </div>
+
+                        <div id="customerDisplay" style="display: none;">
+                            <div class="customer-info">
+                                <h4 id="customerName">Customer</h4>
+                                <p id="customerPhoneDisplay">Phone: </p>
+                                <p id="visitCount">Visits: 0</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                                </div>
+                                <p id="progressText">0 visits towards reward</p>
+                            </div>
+
+                            <div id="rewardSection" class="reward-available" style="display: none;">
+                                <h4>🎉 Reward Available!</h4>
+                                <p id="rewardDescription">Customer has earned a reward!</p>
+                                <button class="redeem-btn" onclick="redeemReward()">Redeem Reward</button>
+                            </div>
+
+                            <div class="phone-input">
+                                <button onclick="logVisit()" class="log-visit-btn">Log Visit</button>
+                            </div>
+                        </div>
+
+                        <div id="newCustomerForm" style="display: none;">
+                            <div class="customer-info">
+                                <h4>New Customer</h4>
+                                <div class="form-group">
+                                    <label for="newCustomerName">Customer Name (Optional)</label>
+                                    <input type="text" id="newCustomerName" placeholder="Enter customer name">
+                                </div>
+                                <button class="btn" onclick="addNewCustomer()">Add Customer & Log First Visit</button>
+                            </div>
+                        </div>
+
+                        <div id="customerLoading" class="loading-state" style="display: none;">
+                            <div class="loader"></div>
+                            <p>Looking up customer...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer List View -->
+                <div id="customerListView" class="customer-view" style="display: none;">
+                    <div class="customer-list-header">
+                        <h3>👥 Customer Database</h3>
+                        <div class="customer-actions">
+                            <button class="btn-small" onclick="exportCustomersCSV()">📥 Export CSV</button>
+                            <button class="btn-small" onclick="showBulkSMSModal()">📱 Send Group SMS</button>
                         </div>
                     </div>
 
-                    <div id="customerLoading" class="loading-state" style="display: none;">
+                    <!-- Search and Filters -->
+                    <div class="customer-filters">
+                        <div class="search-box">
+                            <input type="text" id="customerSearch" placeholder="Search by name or phone..." oninput="filterCustomers()">
+                        </div>
+                        <div class="filter-controls">
+                            <select id="segmentFilter" onchange="filterCustomers()">
+                                <option value="all">All Segments</option>
+                                <option value="vip">VIP (10+ visits)</option>
+                                <option value="regular">Regular (3-9 visits)</option>
+                                <option value="new">New (1-2 visits)</option>
+                                <option value="inactive">Inactive (60+ days)</option>
+                            </select>
+                            <select id="sortBy" onchange="sortCustomers()">
+                                <option value="lastVisit">Last Visit (Recent)</option>
+                                <option value="totalVisits">Most Visits</option>
+                                <option value="name">Name (A-Z)</option>
+                                <option value="firstVisit">First Visit (Oldest)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Inactive Customer Alert -->
+                    <div id="inactiveAlert" class="alert-banner" style="display: none;">
+                        <span class="alert-icon">⚠️</span>
+                        <div class="alert-content">
+                            <strong>Inactive Customers Detected</strong>
+                            <p id="inactiveCount">0 customers haven't visited in 60+ days</p>
+                            <button class="btn-small" onclick="showReEngagementModal()">Generate Re-engagement Campaign</button>
+                        </div>
+                    </div>
+
+                    <div id="customerListLoading" class="loading-state" style="display: none;">
                         <div class="loader"></div>
-                        <p>Looking up customer...</p>
+                        <p>Loading customers...</p>
+                    </div>
+
+                    <!-- Customer Table -->
+                    <div class="customer-table-container">
+                        <table class="customer-table" id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                    <th>Customer</th>
+                                    <th>Phone</th>
+                                    <th>Total Visits</th>
+                                    <th>Last Visit</th>
+                                    <th>Status</th>
+                                    <th>Tags</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <!-- Customers will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" onclick="previousPage()" id="prevPageBtn">← Previous</button>
+                        <span class="pagination-info" id="paginationInfo">Page 1 of 1</span>
+                        <button class="pagination-btn" onclick="nextPage()" id="nextPageBtn">Next →</button>
                     </div>
                 </div>
             </div>
@@ -221,6 +537,139 @@
         <span id="notificationText"></span>
     </div>
 
+    <!-- Customer Profile Modal -->
+    <div id="customerProfileModal" class="modal" style="display: none;">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>👤 Customer Profile</h2>
+                <button class="modal-close" onclick="closeCustomerProfileModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="profile-layout">
+                    <!-- Left Column: Customer Info & Stats -->
+                    <div class="profile-sidebar">
+                        <div class="profile-info-card">
+                            <div class="profile-avatar">
+                                <span id="profileInitials">??</span>
+                            </div>
+                            <h3 id="profileName">Customer Name</h3>
+                            <p id="profilePhone" class="profile-phone">+234 000 000 0000</p>
+                            <span id="profileStatus" class="status-badge">New</span>
+                        </div>
+
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <span class="stat-value" id="profileTotalVisits">0</span>
+                                <span class="stat-label">Total Visits</span>
+                            </div>
+                            <div class="profile-stat">
+                                <span class="stat-value" id="profileRedeemed">0</span>
+                                <span class="stat-label">Rewards Redeemed</span>
+                            </div>
+                            <div class="profile-stat">
+                                <span class="stat-value" id="profileDaysSince">0</span>
+                                <span class="stat-label">Days Since Last Visit</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-actions">
+                            <button class="btn" onclick="logVisitFromProfile()">➕ Log Visit</button>
+                            <button class="btn-secondary" onclick="deleteCustomerProfile()">🗑️ Delete Customer</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Details & History -->
+                    <div class="profile-main">
+                        <!-- Profile Tabs -->
+                        <div class="profile-tabs">
+                            <button class="profile-tab active" onclick="switchProfileTab('details')">Details</button>
+                            <button class="profile-tab" onclick="switchProfileTab('history')">Visit History</button>
+                            <button class="profile-tab" onclick="switchProfileTab('tags')">Tags</button>
+                        </div>
+
+                        <!-- Details Tab -->
+                        <div id="detailsTab" class="profile-tab-content">
+                            <div class="form-section">
+                                <h4>Personal Information</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="profileFirstName">First Name</label>
+                                        <input type="text" id="profileFirstName" placeholder="Enter first name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileLastName">Last Name</label>
+                                        <input type="text" id="profileLastName" placeholder="Enter last name">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profileEmail">Email</label>
+                                    <input type="email" id="profileEmail" placeholder="customer@example.com">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="profileBirthday">Birthday</label>
+                                        <input type="date" id="profileBirthday">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileAnniversary">Anniversary</label>
+                                        <input type="date" id="profileAnniversary">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Notes & Preferences</h4>
+                                <div class="form-group">
+                                    <label for="profileNotes">Customer Notes</label>
+                                    <textarea id="profileNotes" rows="4" placeholder="Add notes about customer preferences, allergies, special requests, etc."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profilePreferences">Preferences (JSON)</label>
+                                    <textarea id="profilePreferences" rows="3" placeholder='{"favoriteService": "Haircut", "preferredTime": "morning"}'></textarea>
+                                    <small>Optional: Store structured preferences as JSON</small>
+                                </div>
+                            </div>
+
+                            <button class="btn" onclick="saveCustomerProfile()">💾 Save Changes</button>
+                        </div>
+
+                        <!-- Visit History Tab -->
+                        <div id="historyTab" class="profile-tab-content" style="display: none;">
+                            <div class="visit-history-header">
+                                <h4>Complete Visit History</h4>
+                                <span id="visitHistoryCount">0 visits total</span>
+                            </div>
+                            <div class="visit-timeline" id="visitTimeline">
+                                <!-- Visit history will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Tags Tab -->
+                        <div id="tagsTab" class="profile-tab-content" style="display: none;">
+                            <div class="tags-management">
+                                <h4>Customer Tags</h4>
+                                <div class="current-tags" id="currentTags">
+                                    <!-- Current tags will be shown here -->
+                                </div>
+                                <div class="available-tags">
+                                    <h5>Available Tags</h5>
+                                    <div id="availableTags">
+                                        <!-- Available tags will be loaded here -->
+                                    </div>
+                                </div>
+                                <button class="btn-small" onclick="showCreateTagModal()">+ Create New Tag</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+    <script src="analytics.js"></script>
+    <script src="customers.js"></script>
+    <script src="customer-profile.js"></script>
 </body>
 </html>

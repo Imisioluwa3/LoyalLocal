@@ -150,16 +150,18 @@ function switchTab(tabName) {
 // Navigation
 function showSection(sectionName) {
     const navBtns = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('#overviewSection, #customersSection, #settingsSection');
-    
+    const sections = document.querySelectorAll('#overviewSection, #analyticsSection, #customersSection, #settingsSection');
+
     navBtns.forEach(btn => btn.classList.remove('active'));
     sections.forEach(section => section.style.display = 'none');
-    
+
     document.querySelector(`[onclick="showSection('${sectionName}')"]`).classList.add('active');
     document.getElementById(`${sectionName}Section`).style.display = 'block';
-    
+
     if (sectionName === 'overview' && currentBusiness) {
         updateStats(currentBusiness.id);
+    } else if (sectionName === 'analytics' && currentBusiness) {
+        loadAnalytics();
     }
 }
 
