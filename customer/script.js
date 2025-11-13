@@ -14,6 +14,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let phoneInputTimeout;
 let notificationTimeout;
 let isOnline = navigator.onLine;
+let currentBusinessesData = null; // Store current data for filtering/sorting
 
 // Phone number validation and formatting using PhoneUtils
 document.addEventListener('DOMContentLoaded', function() {
@@ -48,11 +49,72 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Setup filter and sort event listeners
+    setupFilterAndSortListeners();
 });
+
+// Setup filter and sort event listeners
+function setupFilterAndSortListeners() {
+    // Filter buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('filter-btn')) {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+
+            // Apply filter
+            const filterType = e.target.getAttribute('data-filter');
+            filterCards(filterType);
+        }
+    });
+
+    // Sort select
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            sortCards(this.value);
+        });
+    }
+}
 
 // Phone number validation function - now uses PhoneUtils
 function validatePhoneNumber(phoneInput) {
     return PhoneUtils.validatePhoneNumber(phoneInput);
+}
+
+// Show skeleton loading cards
+function showSkeletonLoading() {
+    const lookupSection = document.getElementById('lookupSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const loyaltyCards = document.getElementById('loyaltyCards');
+    const customerSummary = document.getElementById('customerSummary');
+
+    if (lookupSection) lookupSection.style.display = 'none';
+    if (resultsSection) resultsSection.classList.add('active');
+    if (customerSummary) customerSummary.style.display = 'none';
+
+    // Create skeleton cards
+    if (loyaltyCards) {
+        const skeletonHTML = Array(3).fill(0).map(() => `
+            <div class="skeleton-card">
+                <div class="skeleton-header">
+                    <div class="skeleton skeleton-icon"></div>
+                    <div class="skeleton-text">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-subtitle"></div>
+                    </div>
+                </div>
+                <div class="skeleton skeleton-progress"></div>
+                <div class="skeleton-stamps">
+                    ${Array(6).fill('<div class="skeleton skeleton-stamp"></div>').join('')}
+                </div>
+                <div class="skeleton skeleton-footer"></div>
+            </div>
+        `).join('');
+
+        loyaltyCards.innerHTML = skeletonHTML;
+    }
 }
 
 // Main lookup function with improved error handling
@@ -91,6 +153,9 @@ async function lookupRewards() {
     btn.disabled = true;
     btnText.textContent = 'Searching...';
     btn.classList.add('loading');
+
+    // Show skeleton loading
+    showSkeletonLoading();
 
     try {
         // Create multiple phone number variations for flexible matching
@@ -339,12 +404,16 @@ function displayResults(customerData, phoneNumber) {
     let totalVisits = 0;
     let availableRewards = 0;
     let earnedRewards = 0;
+    let valueSaved = 0;
 
     businesses.forEach(businessName => {
         const business = customerData.businesses[businessName];
         totalVisits += business.totalVisits;
         earnedRewards += business.totalEarned;
         availableRewards += business.availableRewards;
+
+        // Calculate value saved (estimate ₦2000 per reward)
+        valueSaved += (earnedRewards + availableRewards) * 2000;
     });
 
     // Update summary stats with null checks
@@ -352,6 +421,10 @@ function displayResults(customerData, phoneNumber) {
     updateElementText('totalVisits', totalVisits);
     updateElementText('availableRewards', availableRewards);
     updateElementText('earnedRewards', earnedRewards);
+    updateElementText('valueSaved', `₦${valueSaved.toLocaleString()}`);
+
+    // Store current data for filtering/sorting
+    currentBusinessesData = customerData.businesses;
 
     generateLoyaltyCards(customerData.businesses);
 }
@@ -396,7 +469,7 @@ function generateLoyaltyCards(businesses) {
 function createLoyaltyCard(businessName, data) {
     const card = document.createElement('div');
     card.className = 'loyalty-card';
-    
+
     // Ensure data integrity
     const visitsRequired = Math.max(1, data.visitsRequired || 10);
     const currentVisits = Math.max(0, data.currentVisits || 0);
@@ -407,8 +480,22 @@ function createLoyaltyCard(businessName, data) {
     const progress = Math.min((visitsForProgress / visitsRequired) * 100, 100);
     const hasReward = availableRewards > 0;
     const businessIcon = getBusinessIcon(data.type);
-    
+
+    // Check if "almost there" (1-2 visits away from next reward)
+    const visitsNeeded = visitsRequired - visitsForProgress;
+    const isAlmostThere = !hasReward && visitsNeeded > 0 && visitsNeeded <= 2;
+
+    // Add data attributes for filtering/sorting
+    card.setAttribute('data-business-name', businessName);
+    card.setAttribute('data-has-reward', hasReward ? 'true' : 'false');
+    card.setAttribute('data-almost-there', isAlmostThere ? 'true' : 'false');
+    card.setAttribute('data-progress', progress.toFixed(2));
+    card.setAttribute('data-last-visit', data.lastVisit);
+    card.setAttribute('data-total-visits', data.totalVisits);
+    card.setAttribute('data-available-rewards', availableRewards);
+
     card.innerHTML = `
+        ${isAlmostThere ? `<div class="almost-there-badge">⚡ ${visitsNeeded} more visit${visitsNeeded > 1 ? 's' : ''} to reward!</div>` : ''}
         <div class="business-header">
             <div class="business-icon">${businessIcon}</div>
             <div class="business-info">
@@ -520,6 +607,76 @@ function formatDate(dateString) {
         console.error('Error formatting date:', error);
         return 'Unknown date';
     }
+}
+
+// Filter cards based on selected filter
+function filterCards(filterType) {
+    const cards = document.querySelectorAll('.loyalty-card');
+
+    cards.forEach(card => {
+        const hasReward = card.getAttribute('data-has-reward') === 'true';
+        const isAlmostThere = card.getAttribute('data-almost-there') === 'true';
+
+        let shouldShow = false;
+
+        switch (filterType) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'ready':
+                shouldShow = hasReward;
+                break;
+            case 'almost':
+                shouldShow = isAlmostThere;
+                break;
+            default:
+                shouldShow = true;
+        }
+
+        if (shouldShow) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+
+// Sort cards based on selected criterion
+function sortCards(sortType) {
+    const container = document.getElementById('loyaltyCards');
+    if (!container) return;
+
+    const cards = Array.from(document.querySelectorAll('.loyalty-card'));
+
+    cards.sort((a, b) => {
+        switch (sortType) {
+            case 'rewards': {
+                const aRewards = parseInt(a.getAttribute('data-available-rewards')) || 0;
+                const bRewards = parseInt(b.getAttribute('data-available-rewards')) || 0;
+                return bRewards - aRewards; // Descending
+            }
+            case 'progress': {
+                const aProgress = parseFloat(a.getAttribute('data-progress')) || 0;
+                const bProgress = parseFloat(b.getAttribute('data-progress')) || 0;
+                return bProgress - aProgress; // Descending
+            }
+            case 'recent': {
+                const aDate = new Date(a.getAttribute('data-last-visit'));
+                const bDate = new Date(b.getAttribute('data-last-visit'));
+                return bDate - aDate; // Most recent first
+            }
+            case 'visits': {
+                const aVisits = parseInt(a.getAttribute('data-total-visits')) || 0;
+                const bVisits = parseInt(b.getAttribute('data-total-visits')) || 0;
+                return bVisits - aVisits; // Descending
+            }
+            default:
+                return 0;
+        }
+    });
+
+    // Re-append cards in sorted order
+    cards.forEach(card => container.appendChild(card));
 }
 
 // Show no results page with improved error handling

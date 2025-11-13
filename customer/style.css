@@ -395,6 +395,202 @@ body {
     margin-top: 10px;
 }
 
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.total-stats {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+/* Filter and Sort Controls */
+.cards-controls {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #e1e5e9;
+    background: white;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.sort-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-dropdown label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.sort-select {
+    padding: 10px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #333;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.sort-select:hover {
+    border-color: #667eea;
+}
+
+/* Almost There Badge */
+.almost-there-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    animation: gentlePulse 2s infinite;
+}
+
+@keyframes gentlePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 20px rgba(255, 193, 7, 0.5);
+    }
+}
+
+/* Skeleton Loading States */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmerSkeleton 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes shimmerSkeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.skeleton-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.skeleton-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.skeleton-text {
+    flex: 1;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 70%;
+    margin-bottom: 8px;
+}
+
+.skeleton-subtitle {
+    height: 16px;
+    width: 40%;
+}
+
+.skeleton-progress {
+    height: 12px;
+    width: 100%;
+    margin: 20px 0;
+}
+
+.skeleton-stamps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.skeleton-stamp {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.skeleton-footer {
+    height: 16px;
+    width: 60%;
+    margin-top: 20px;
+}
+
+/* Hidden state for filtered cards */
+.loyalty-card.hidden {
+    display: none;
+}
+
 .notification {
     position: fixed;
     top: 20px;
@@ -541,6 +737,30 @@ button:focus {
         width: 35px;
         height: 35px;
         font-size: 1rem;
+    }
+    .cards-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-buttons {
+        justify-content: center;
+    }
+    .filter-btn {
+        flex: 1;
+        min-width: 100px;
+        font-size: 0.85rem;
+        padding: 8px 15px;
+    }
+    .sort-dropdown {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .sort-select {
+        flex: 1;
+    }
+    .card-footer {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 

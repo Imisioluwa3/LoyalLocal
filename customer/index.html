@@ -78,6 +78,28 @@
                             <span class="stat-number" id="earnedRewards">0</span>
                             <div class="stat-label">Total Earned</div>
                         </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="valueSaved">₦0</span>
+                            <div class="stat-label">Value Saved</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loyalty Cards Controls -->
+                <div class="cards-controls">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="ready">Ready to Redeem</button>
+                        <button class="filter-btn" data-filter="almost">Almost There</button>
+                    </div>
+                    <div class="sort-dropdown">
+                        <label for="sortSelect">Sort by:</label>
+                        <select id="sortSelect" class="sort-select">
+                            <option value="rewards">Rewards Ready</option>
+                            <option value="progress">Progress</option>
+                            <option value="recent">Most Recent</option>
+                            <option value="visits">Total Visits</option>
+                        </select>
                     </div>
                 </div>
 
