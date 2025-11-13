@@ -15,7 +15,7 @@
 .analytics-header h3 {
     margin: 0;
     font-size: 1.8rem;
-    color: #1a202c;
+    color: #ffffff;
 }
 
 .date-range-selector {
@@ -26,7 +26,7 @@
 
 .date-range-selector label {
     font-weight: 500;
-    color: #4a5568;
+    color: #ffffff;
 }
 
 .date-range-selector select {

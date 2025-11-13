@@ -17,17 +17,17 @@
     border-bottom: 3px solid transparent;
     font-size: 1rem;
     font-weight: 500;
-    color: #718096;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .customer-tab:hover {
-    color: #3b82f6;
+    color: #49e4e4;
 }
 
 .customer-tab.active {
-    color: #3b82f6;
+    color: #49e4e4;
     border-bottom-color: #3b82f6;
 }
 
@@ -48,7 +48,7 @@
 .customer-list-header h3 {
     margin: 0;
     font-size: 1.6rem;
-    color: #1a202c;
+    color: #ffffff;
 }
 
 .customer-actions {
@@ -298,6 +298,7 @@
     font-size: 0.9rem;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 10px;
 }
 
 .btn-small:hover {
