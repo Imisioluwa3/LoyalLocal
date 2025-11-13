@@ -89,10 +89,12 @@ function showSkeletonLoading() {
     const resultsSection = document.getElementById('resultsSection');
     const loyaltyCards = document.getElementById('loyaltyCards');
     const customerSummary = document.getElementById('customerSummary');
+    const cardsControls = document.querySelector('.cards-controls');
 
     if (lookupSection) lookupSection.style.display = 'none';
     if (resultsSection) resultsSection.classList.add('active');
     if (customerSummary) customerSummary.style.display = 'none';
+    if (cardsControls) cardsControls.style.display = 'none';
 
     // Create skeleton cards
     if (loyaltyCards) {
@@ -374,7 +376,9 @@ function transformVisitData(visits, phoneNumber) {
 function displayResults(customerData, phoneNumber) {
     const lookupSection = document.getElementById('lookupSection');
     const resultsSection = document.getElementById('resultsSection');
-    
+    const customerSummary = document.getElementById('customerSummary');
+    const cardsControls = document.querySelector('.cards-controls');
+
     if (!lookupSection || !resultsSection) {
         console.error('Required sections not found');
         return;
@@ -382,6 +386,10 @@ function displayResults(customerData, phoneNumber) {
 
     lookupSection.style.display = 'none';
     resultsSection.classList.add('active');
+
+    // Show customer summary and controls (they were hidden during skeleton loading)
+    if (customerSummary) customerSummary.style.display = 'block';
+    if (cardsControls) cardsControls.style.display = 'flex';
 
     // Format phone number for display
     const cleanNumber = phoneNumber.replace(/\D/g, '');
@@ -686,12 +694,14 @@ function showNoResults() {
     const customerSummary = document.getElementById('customerSummary');
     const loyaltyCards = document.getElementById('loyaltyCards');
     const noResults = document.getElementById('noResults');
-    
+    const cardsControls = document.querySelector('.cards-controls');
+
     if (lookupSection) lookupSection.style.display = 'none';
     if (resultsSection) resultsSection.classList.add('active');
     if (customerSummary) customerSummary.style.display = 'none';
     if (loyaltyCards) loyaltyCards.style.display = 'none';
     if (noResults) noResults.style.display = 'block';
+    if (cardsControls) cardsControls.style.display = 'none';
 }
 
 // Navigation back to search with improved error handling
