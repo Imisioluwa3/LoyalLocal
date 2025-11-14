@@ -18,6 +18,9 @@ let currentBusinessesData = null; // Store current data for filtering/sorting
 
 // Phone number validation and formatting using PhoneUtils
 document.addEventListener('DOMContentLoaded', function() {
+    // Load dark mode preference
+    loadDarkModePreference();
+
     const phoneInput = document.getElementById('customerPhone');
 
     phoneInput.addEventListener('input', function(e) {
@@ -90,11 +93,13 @@ function showSkeletonLoading() {
     const loyaltyCards = document.getElementById('loyaltyCards');
     const customerSummary = document.getElementById('customerSummary');
     const cardsControls = document.querySelector('.cards-controls');
+    const activityTimeline = document.getElementById('activityTimeline');
 
     if (lookupSection) lookupSection.style.display = 'none';
     if (resultsSection) resultsSection.classList.add('active');
     if (customerSummary) customerSummary.style.display = 'none';
     if (cardsControls) cardsControls.style.display = 'none';
+    if (activityTimeline) activityTimeline.style.display = 'none';
 
     // Create skeleton cards
     if (loyaltyCards) {
@@ -327,6 +332,7 @@ function transformVisitData(visits, phoneNumber) {
                 totalVisits: 0,   // All visits ever made
                 visitsRequired: Math.max(1, business.loyalty_visits_required || 10), // Ensure minimum of 1
                 rewardDescription: business.loyalty_reward_description || 'Free service',
+                rewardValue: business.reward_value || 2000, // Monetary value of reward
                 lastVisit: visit.created_at,
                 totalEarned: 0,
                 availableRewards: 0
@@ -391,6 +397,10 @@ function displayResults(customerData, phoneNumber) {
     if (customerSummary) customerSummary.style.display = 'block';
     if (cardsControls) cardsControls.style.display = 'flex';
 
+    // Show activity timeline
+    const activityTimeline = document.getElementById('activityTimeline');
+    if (activityTimeline) activityTimeline.style.display = 'block';
+
     // Format phone number for display
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     const formattedPhone = `+${cleanNumber.substring(0, 3)} ${cleanNumber.substring(3, 6)} ${cleanNumber.substring(6, 9)} ${cleanNumber.substring(9)}`;
@@ -420,8 +430,9 @@ function displayResults(customerData, phoneNumber) {
         earnedRewards += business.totalEarned;
         availableRewards += business.availableRewards;
 
-        // Calculate value saved (estimate ₦2000 per reward)
-        valueSaved += (earnedRewards + availableRewards) * 2000;
+        // Calculate value saved using business-specific reward value
+        const rewardValue = business.rewardValue || 2000;
+        valueSaved += (business.totalEarned + business.availableRewards) * rewardValue;
     });
 
     // Update summary stats with null checks
@@ -433,6 +444,11 @@ function displayResults(customerData, phoneNumber) {
 
     // Store current data for filtering/sorting
     currentBusinessesData = customerData.businesses;
+
+    // Phase 2: Generate achievements and timeline
+    const achievements = calculateAchievements(customerData);
+    displayAchievements(achievements);
+    generateTimeline(customerData);
 
     generateLoyaltyCards(customerData.businesses);
 }
@@ -687,6 +703,147 @@ function sortCards(sortType) {
     cards.forEach(card => container.appendChild(card));
 }
 
+/* ============================================
+   PHASE 2: DARK MODE, ACHIEVEMENTS, TIMELINE
+   ============================================ */
+
+// Dark Mode Functions
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+
+    // Update icon
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Save preference
+    localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+}
+
+function loadDarkModePreference() {
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        // Update icon if on results page
+        const themeIcon = document.querySelector('.theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = '☀️';
+        }
+    }
+}
+
+// Achievement Badges System
+function calculateAchievements(customerData) {
+    const achievements = [];
+    const businesses = Object.keys(customerData.businesses);
+
+    // Calculate total stats
+    let totalVisits = 0;
+    let totalRewards = 0;
+    let hasRewardReady = false;
+
+    businesses.forEach(businessName => {
+        const business = customerData.businesses[businessName];
+        totalVisits += business.totalVisits;
+        totalRewards += business.totalEarned;
+        if (business.availableRewards > 0) hasRewardReady = true;
+    });
+
+    // First Visit Achievement
+    if (totalVisits === 1) {
+        achievements.push({ icon: '🌟', text: 'First Visit' });
+    }
+
+    // VIP Status (10+ visits)
+    if (totalVisits >= 10) {
+        achievements.push({ icon: '💎', text: 'VIP Member' });
+    }
+
+    // Multi-Business Loyalty (3+ businesses)
+    if (businesses.length >= 3) {
+        achievements.push({ icon: '🎯', text: 'Multi-Loyalist' });
+    }
+
+    // Reward Collector (5+ rewards earned)
+    if (totalRewards >= 5) {
+        achievements.push({ icon: '🏆', text: 'Reward Collector' });
+    }
+
+    // Active Member (reward ready)
+    if (hasRewardReady) {
+        achievements.push({ icon: '🎉', text: 'Reward Ready!' });
+    }
+
+    // Super Loyal (30+ total visits)
+    if (totalVisits >= 30) {
+        achievements.push({ icon: '⭐', text: 'Super Loyal' });
+    }
+
+    return achievements;
+}
+
+function displayAchievements(achievements) {
+    const container = document.getElementById('achievementBadges');
+    if (!container) return;
+
+    if (achievements.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    container.innerHTML = achievements.map(achievement => `
+        <div class="achievement-badge">
+            <span class="badge-icon">${achievement.icon}</span>
+            <span>${achievement.text}</span>
+        </div>
+    `).join('');
+}
+
+// Activity Timeline Generation
+function generateTimeline(customerData) {
+    const container = document.getElementById('timelineContent');
+    if (!container) return;
+
+    // Collect all visits from all businesses
+    const allVisits = [];
+    Object.entries(customerData.businesses).forEach(([businessName, business]) => {
+        // Create visit entries (we don't have individual visit data, so we'll create summary)
+        allVisits.push({
+            businessName: businessName,
+            lastVisit: business.lastVisit,
+            totalVisits: business.totalVisits,
+            totalEarned: business.totalEarned,
+            availableRewards: business.availableRewards
+        });
+    });
+
+    // Sort by most recent
+    allVisits.sort((a, b) => new Date(b.lastVisit) - new Date(a.lastVisit));
+
+    // Show only top 5 recent activities
+    const recentVisits = allVisits.slice(0, 5);
+
+    if (recentVisits.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No recent activity</p>';
+        return;
+    }
+
+    container.innerHTML = recentVisits.map(visit => {
+        const hasReward = visit.availableRewards > 0;
+        return `
+            <div class="timeline-item">
+                <div class="timeline-date">${formatDate(visit.lastVisit)}</div>
+                <div class="timeline-event">Visit #${visit.totalVisits}</div>
+                <div class="timeline-business">${escapeHtml(visit.businessName)}</div>
+                ${hasReward ? `<div class="timeline-reward">🎁 ${visit.availableRewards} Reward${visit.availableRewards > 1 ? 's' : ''} Available!</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
 // Show no results page with improved error handling
 function showNoResults() {
     const lookupSection = document.getElementById('lookupSection');
@@ -695,6 +852,7 @@ function showNoResults() {
     const loyaltyCards = document.getElementById('loyaltyCards');
     const noResults = document.getElementById('noResults');
     const cardsControls = document.querySelector('.cards-controls');
+    const activityTimeline = document.getElementById('activityTimeline');
 
     if (lookupSection) lookupSection.style.display = 'none';
     if (resultsSection) resultsSection.classList.add('active');
@@ -702,6 +860,7 @@ function showNoResults() {
     if (loyaltyCards) loyaltyCards.style.display = 'none';
     if (noResults) noResults.style.display = 'block';
     if (cardsControls) cardsControls.style.display = 'none';
+    if (activityTimeline) activityTimeline.style.display = 'none';
 }
 
 // Navigation back to search with improved error handling

@@ -750,12 +750,14 @@ async function redeemReward() {
 function loadSettings(business) {
     document.getElementById('visitsRequired').value = business.loyalty_visits_required || 5;
     document.getElementById('rewardDescription').value = business.loyalty_reward_description || '50% off next service';
+    document.getElementById('rewardValue').value = business.reward_value || 2000;
     document.getElementById('smsNotifications').checked = business.sms_notifications_enabled !== false;
 }
 
 async function saveSettings() {
     const visitsRequired = parseInt(document.getElementById('visitsRequired').value);
     const rewardDescription = document.getElementById('rewardDescription').value.trim();
+    const rewardValue = parseInt(document.getElementById('rewardValue').value) || 2000;
     const smsNotifications = document.getElementById('smsNotifications').checked;
 
     if (!visitsRequired || visitsRequired < 1 || visitsRequired > 50) {
@@ -765,6 +767,11 @@ async function saveSettings() {
 
     if (!rewardDescription) {
         showNotification('Please enter a reward description', 'error');
+        return;
+    }
+
+    if (rewardValue < 0) {
+        showNotification('Please enter a valid reward value (minimum 0)', 'error');
         return;
     }
 
@@ -779,6 +786,7 @@ async function saveSettings() {
             .update({
                 loyalty_visits_required: visitsRequired,
                 loyalty_reward_description: rewardDescription,
+                reward_value: rewardValue,
                 sms_notifications_enabled: smsNotifications,
                 updated_at: new Date().toISOString()
             })
@@ -790,6 +798,7 @@ async function saveSettings() {
         if (currentBusiness) {
             currentBusiness.loyalty_visits_required = visitsRequired;
             currentBusiness.loyalty_reward_description = rewardDescription;
+            currentBusiness.reward_value = rewardValue;
             currentBusiness.sms_notifications_enabled = smsNotifications;
         }
 

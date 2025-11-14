@@ -59,8 +59,19 @@
                 
                 <!-- Customer Summary -->
                 <div id="customerSummary" class="customer-summary">
-                    <h2 id="welcomeMessage">Welcome back!</h2>
-                    <p id="phoneDisplay">Phone: (555) 123-4567</p>
+                    <div class="summary-header">
+                        <div>
+                            <h2 id="welcomeMessage">Welcome back!</h2>
+                            <p id="phoneDisplay">Phone: (555) 123-4567</p>
+                        </div>
+                        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                            <span class="theme-icon">🌙</span>
+                        </button>
+                    </div>
+
+                    <!-- Achievement Badges -->
+                    <div id="achievementBadges" class="achievement-badges"></div>
+
                     <div class="summary-stats">
                         <div class="stat-item">
                             <span class="stat-number" id="totalBusinesses">0</span>
@@ -83,6 +94,12 @@
                             <div class="stat-label">Value Saved</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div id="activityTimeline" class="activity-timeline">
+                    <h3>📅 Recent Activity</h3>
+                    <div id="timelineContent" class="timeline-content"></div>
                 </div>
 
                 <!-- Loyalty Cards Controls -->
