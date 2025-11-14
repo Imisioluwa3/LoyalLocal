@@ -369,13 +369,14 @@ async function showDashboard() {
     try {
         console.log('Showing dashboard...');
         showLoading('dashboardLoading', true);
-        
+
+        // OPTIMIZATION: Get user first (required for next query)
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError) {
             console.error('Error getting user:', userError);
             throw userError;
         }
-        
+
         if (!user) {
             console.error('No user found');
             throw new Error('No authenticated user found');
@@ -383,6 +384,7 @@ async function showDashboard() {
 
         console.log('Current user:', user.id);
 
+        // OPTIMIZATION: Fetch business data
         const { data: business, error: businessError } = await supabase
             .from('businesses')
             .select('*')
@@ -406,19 +408,25 @@ async function showDashboard() {
         console.log('Business data:', business);
         currentBusiness = business;
 
-        // Update UI
+        // Update UI immediately (don't wait for stats)
         document.getElementById('authSection').style.display = 'none';
         document.getElementById('dashboardSection').classList.add('active');
         document.getElementById('businessNameDisplay').textContent = `Welcome, ${business.name}!`;
-        
-        // Load settings and stats
+
+        // Load settings synchronously
         loadSettings(business);
-        await updateStats(business.id);
-        
+
         // Show overview section by default
         showSection('overview');
-        
+
         console.log('Dashboard loaded successfully');
+
+        // OPTIMIZATION: Load stats in background (non-blocking)
+        updateStats(business.id).catch(error => {
+            console.error('Error loading stats:', error);
+            // Don't block dashboard if stats fail
+        });
+
     } catch (error) {
         console.error('Error showing dashboard:', error);
         showNotification('Error loading dashboard: ' + error.message, 'error');
@@ -431,53 +439,65 @@ async function showDashboard() {
 async function updateStats(businessId) {
     try {
         console.log('Updating stats for business:', businessId);
-        
-        // Total Customers (unique phone numbers)
-        const { data: uniqueCustomers, error: customersError } = await supabase
-            .from('visits')
-            .select('customer_phone_number')
-            .eq('business_id', businessId);
 
-        if (customersError) throw customersError;
-
-        const totalCustomers = new Set(uniqueCustomers?.map(v => v.customer_phone_number) || []).size;
-
-        // Visits Today
         const today = new Date().toISOString().split('T')[0];
-        const { count: visitsToday, error: visitsError } = await supabase
-            .from('visits')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', businessId)
-            .gte('created_at', today);
 
-        if (visitsError) throw visitsError;
+        // OPTIMIZATION: Run all queries in parallel using Promise.all
+        const [
+            uniqueCustomersResult,
+            visitsTodayResult,
+            rewardsRedeemedResult,
+            businessResult,
+            allVisitsResult
+        ] = await Promise.all([
+            // Total Customers (unique phone numbers)
+            supabase
+                .from('visits')
+                .select('customer_phone_number')
+                .eq('business_id', businessId),
 
-        // Rewards Redeemed
-        const { count: rewardsRedeemed, error: rewardsError } = await supabase
-            .from('visits')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', businessId)
-            .eq('is_redeemed_for_reward', true);
+            // Visits Today
+            supabase
+                .from('visits')
+                .select('*', { count: 'exact', head: true })
+                .eq('business_id', businessId)
+                .gte('created_at', today),
 
-        if (rewardsError) throw rewardsError;
+            // Rewards Redeemed
+            supabase
+                .from('visits')
+                .select('*', { count: 'exact', head: true })
+                .eq('business_id', businessId)
+                .eq('is_redeemed_for_reward', true),
 
-        // Rewards Earned
-        const { data: business } = await supabase
-            .from('businesses')
-            .select('loyalty_visits_required')
-            .eq('id', businessId)
-            .single();
+            // Business loyalty settings
+            supabase
+                .from('businesses')
+                .select('loyalty_visits_required')
+                .eq('id', businessId)
+                .single(),
 
-        const { data: allVisits, error: allVisitsError } = await supabase
-            .from('visits')
-            .select('customer_phone_number, is_redeemed_for_reward')
-            .eq('business_id', businessId);
+            // All visits for rewards calculation
+            supabase
+                .from('visits')
+                .select('customer_phone_number, is_redeemed_for_reward')
+                .eq('business_id', businessId)
+        ]);
 
-        if (allVisitsError) throw allVisitsError;
+        // Check for errors
+        if (uniqueCustomersResult.error) throw uniqueCustomersResult.error;
+        if (visitsTodayResult.error) throw visitsTodayResult.error;
+        if (rewardsRedeemedResult.error) throw rewardsRedeemedResult.error;
+        if (allVisitsResult.error) throw allVisitsResult.error;
+
+        // Calculate total customers
+        const totalCustomers = new Set(
+            uniqueCustomersResult.data?.map(v => v.customer_phone_number) || []
+        ).size;
 
         // Group visits by customer and count unredeemed visits
         const customerVisits = {};
-        allVisits?.forEach(visit => {
+        allVisitsResult.data?.forEach(visit => {
             if (!customerVisits[visit.customer_phone_number]) {
                 customerVisits[visit.customer_phone_number] = 0;
             }
@@ -487,17 +507,23 @@ async function updateStats(businessId) {
         });
 
         // Count customers with enough visits for a reward
+        const loyaltyRequired = businessResult.data?.loyalty_visits_required || 5;
         const rewardsEarned = Object.values(customerVisits).filter(
-            visitCount => visitCount >= (business?.loyalty_visits_required || 5)
+            visitCount => visitCount >= loyaltyRequired
         ).length;
 
         // Update UI
         document.getElementById('totalCustomers').textContent = totalCustomers || 0;
-        document.getElementById('visitsToday').textContent = visitsToday || 0;
-        document.getElementById('rewardsRedeemed').textContent = rewardsRedeemed || 0;
+        document.getElementById('visitsToday').textContent = visitsTodayResult.count || 0;
+        document.getElementById('rewardsRedeemed').textContent = rewardsRedeemedResult.count || 0;
         document.getElementById('rewardsEarned').textContent = rewardsEarned || 0;
-        
-        console.log('Stats updated:', { totalCustomers, visitsToday, rewardsRedeemed, rewardsEarned });
+
+        console.log('Stats updated:', {
+            totalCustomers,
+            visitsToday: visitsTodayResult.count,
+            rewardsRedeemed: rewardsRedeemedResult.count,
+            rewardsEarned
+        });
     } catch (error) {
         console.error('Error updating stats:', error);
         showNotification('Error loading statistics: ' + error.message, 'error');

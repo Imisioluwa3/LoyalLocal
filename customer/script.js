@@ -169,66 +169,47 @@ async function lookupRewards() {
         const phoneVariations = generatePhoneVariations(phoneNumber);
         console.log('Searching for phone variations:', phoneVariations);
 
-        // First, let's check if the visits table exists and has data
-        const { data: testData, error: testError } = await supabase
-            .from('visits')
-            .select('*')
-            .limit(1);
+        // OPTIMIZATION: Query all phone variations in parallel
+        const variationPromises = phoneVariations.map(phoneVariation =>
+            supabase
+                .from('visits')
+                .select(`
+                    *,
+                    businesses:business_id (
+                        name,
+                        type,
+                        loyalty_visits_required,
+                        loyalty_reward_description
+                    )
+                `)
+                .eq('customer_phone_number', phoneVariation)
+                .order('created_at', { ascending: false })
+        );
 
-        if (testError) {
-            console.error('Table access error:', testError);
-            throw new Error(`Database error: ${testError.message}`);
-        }
+        // Wait for all queries to complete (fail gracefully if some fail)
+        const results = await Promise.allSettled(variationPromises);
 
-        console.log('Table access successful, sample data:', testData);
-
-        // Try multiple queries with different phone number formats
+        // Find first successful result with data
         let visits = null;
-        let queryError = null;
-
-        for (const phoneVariation of phoneVariations) {
-            try {
-                console.log(`Trying phone format: ${phoneVariation}`);
-                
-                const { data, error } = await supabase
-                    .from('visits')
-                    .select(`
-                        *,
-                        businesses:business_id (
-                            name,
-                            type,
-                            loyalty_visits_required,
-                            loyalty_reward_description
-                        )
-                    `)
-                    .eq('customer_phone_number', phoneVariation)
-                    .order('created_at', { ascending: false });
-
-                if (error) {
-                    console.error(`Query error for ${phoneVariation}:`, error);
-                    queryError = error;
-                    continue;
-                }
-
-                if (data && data.length > 0) {
-                    console.log(`Found ${data.length} visits for ${phoneVariation}`);
-                    visits = data;
-                    break;
-                }
-            } catch (err) {
-                console.error(`Exception for ${phoneVariation}:`, err);
-                continue;
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === 'fulfilled' && result.value.data && result.value.data.length > 0) {
+                console.log(`Found ${result.value.data.length} visits for ${phoneVariations[i]}`);
+                visits = result.value.data;
+                break;
+            } else if (result.status === 'rejected') {
+                console.error(`Query failed for ${phoneVariations[i]}:`, result.reason);
             }
         }
 
         // If no visits found with any format, try a broader search
         if (!visits || visits.length === 0) {
             console.log('No exact matches found, trying broader search...');
-            
+
             // Try searching with LIKE operator for partial matches
             const cleanNumber = phoneNumber.replace(/\D/g, '');
             const numberSuffix = cleanNumber.slice(-10); // Last 10 digits
-            
+
             const { data: likeData, error: likeError } = await supabase
                 .from('visits')
                 .select(`
@@ -246,6 +227,9 @@ async function lookupRewards() {
             if (!likeError && likeData && likeData.length > 0) {
                 console.log(`Found ${likeData.length} visits with LIKE search`);
                 visits = likeData;
+            } else if (likeError) {
+                console.error('LIKE search error:', likeError);
+                throw new Error(`Database error: ${likeError.message}`);
             }
         }
 
