@@ -102,9 +102,16 @@
             </div>
 
             <div class="dashboard-header">
-                <h2 id="businessNameDisplay">Welcome to Your Dashboard</h2>
-                <p>Manage your loyalty program and track customer visits</p>
-                <button class="btn logout-btn" onclick="logout()">Logout</button>
+                <div class="dashboard-header-content">
+                    <h2 id="businessNameDisplay">Welcome to Your Dashboard</h2>
+                    <p>Manage your loyalty program and track customer visits</p>
+                </div>
+                <div class="dashboard-header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button class="btn logout-btn" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div id="dashboardLoading" class="loading-state" style="display: none;">

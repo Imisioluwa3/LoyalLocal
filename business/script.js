@@ -12,13 +12,16 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let currentBusiness = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+
     if (typeof supabase === 'undefined') {
         console.error('Supabase not loaded! Check script order.');
         showNotification('System error: Database connection failed', 'error');
         return;
     }
-    
+
+    // Load dark mode preference
+    loadDarkModePreference();
+
     // Check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
@@ -30,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auth state listener
     supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth state changed:', event, session);
-        
+
         if (event === 'SIGNED_IN' && session) {
             try {
                 // Check if business record exists
@@ -50,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const metadata = session.user.user_metadata;
                     if (metadata.business_name) {
                         console.log('Creating business record from metadata...');
-                        
+
                         const { error: businessError } = await supabase
                             .from('businesses')
                             .insert({
@@ -69,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
-                
+
                 showDashboard();
             } catch (error) {
                 console.error('Error in auth state change:', error);
@@ -806,7 +809,7 @@ async function saveSettings() {
     try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError) throw userError;
-        
+
         const { error } = await supabase
             .from('businesses')
             .update({
@@ -834,5 +837,32 @@ async function saveSettings() {
         showNotification('Error saving settings: ' + error.message, 'error');
     } finally {
         showLoading('settingsLoading', false);
+    }
+}
+
+// Dark Mode Functions
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+
+    // Update icon
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Save preference
+    localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+}
+
+function loadDarkModePreference() {
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        // Update icon if on dashboard
+        const themeIcon = document.querySelector('.theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = '☀️';
+        }
     }
 }
