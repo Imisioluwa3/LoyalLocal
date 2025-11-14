@@ -27,6 +27,31 @@ async function viewCustomerProfile(phone) {
 }
 
 // ===================================================================
+// HELPER: Parse customer name from visits
+// ===================================================================
+function parseCustomerName(customerName) {
+    if (!customerName || !customerName.trim()) {
+        return { first_name: '', last_name: '' };
+    }
+
+    const nameParts = customerName.trim().split(/\s+/);
+
+    if (nameParts.length === 1) {
+        // Single name like "Moses" -> put in first_name
+        return {
+            first_name: nameParts[0],
+            last_name: ''
+        };
+    } else {
+        // Multiple parts like "Mose Oluwajoba" -> first word is first_name, rest is last_name
+        return {
+            first_name: nameParts[0],
+            last_name: nameParts.slice(1).join(' ')
+        };
+    }
+}
+
+// ===================================================================
 // LOAD PROFILE DATA
 // ===================================================================
 async function loadCustomerProfileData(phone) {
@@ -57,21 +82,35 @@ async function loadCustomerProfileData(phone) {
             };
         }
 
+        // If profile has no name, try to get it from customer visits data
+        if (!profile.first_name && !profile.last_name && currentProfileCustomer.name) {
+            const parsedName = parseCustomerName(currentProfileCustomer.name);
+            profile.first_name = parsedName.first_name;
+            profile.last_name = parsedName.last_name;
+        }
+
         // Populate sidebar info
         const customer = currentProfileCustomer;
         const daysSinceLastVisit = Math.floor((new Date() - new Date(customer.lastVisit)) / (1000 * 60 * 60 * 24));
         const status = getCustomerStatus(customer, daysSinceLastVisit);
 
-        // Profile initials
-        const initials = (profile.first_name && profile.last_name)
-            ? `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase()
-            : phone.slice(-2);
+        // Profile initials and name display
+        let displayName = 'No name set';
+        let initials = phone.slice(-2);
+
+        if (profile.first_name || profile.last_name) {
+            displayName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+            if (profile.first_name && profile.last_name) {
+                initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+            } else if (profile.first_name) {
+                initials = profile.first_name.substring(0, 2).toUpperCase();
+            } else if (profile.last_name) {
+                initials = profile.last_name.substring(0, 2).toUpperCase();
+            }
+        }
 
         document.getElementById('profileInitials').textContent = initials;
-        document.getElementById('profileName').textContent =
-            profile.first_name && profile.last_name
-                ? `${profile.first_name} ${profile.last_name}`
-                : 'No name set';
+        document.getElementById('profileName').textContent = displayName;
         document.getElementById('profilePhone').textContent = PhoneUtils.formatPhoneNumber(phone, 'display');
         document.getElementById('profileStatus').textContent = status.label;
         document.getElementById('profileStatus').className = `status-badge ${status.class}`;
@@ -81,7 +120,7 @@ async function loadCustomerProfileData(phone) {
         document.getElementById('profileRedeemed').textContent = customer.redeemed;
         document.getElementById('profileDaysSince').textContent = daysSinceLastVisit;
 
-        // Fill form fields
+        // Fill form fields (now with auto-populated name from visits if profile is empty)
         document.getElementById('profileFirstName').value = profile.first_name || '';
         document.getElementById('profileLastName').value = profile.last_name || '';
         document.getElementById('profileEmail').value = profile.email || '';
