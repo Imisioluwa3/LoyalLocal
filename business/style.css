@@ -238,6 +238,7 @@
 
         .phone-input input {
             flex: 1;
+            padding: 15px;
         }
 
         .phone-input button {
